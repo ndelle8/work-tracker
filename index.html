@@ -182,11 +182,95 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       📱 <strong>iOS / Safari:</strong> Pobierz PDF na telefon, następnie tutaj wybierz go z folderu <em>Pobrane</em> (Pliki → Pobrane). Jeśli iOS otwiera PDF zamiast przesłać — przytrzymaj plik palcem i wybierz „Udostępnij → Skopiuj do…" lub użyj Pliki.
     </div>
     <div id="alert-import" class="alert"></div>
-    <div class="upload-zone" id="upload-zone">
-      <input type="file" id="pdf-input" accept="*/*" onchange="handleFile(this.files[0])">
-      <div class="upload-icon">📄</div>
-      <div class="upload-label">Wybierz PDF z ewidencją</div>
-      <div class="upload-sub">Miesiąc i rok odczytane automatycznie z pliku</div>
+    <!-- Przełącznik JSON (Auto i PDF zawsze widoczne) -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button id="itab-text" class="sub-tab" style="flex:none;width:auto;padding:6px 14px"
+        onclick="switchImportTab('text')">🔗 JSON / Zakładka</button>
+    </div>
+
+    <!-- Panel PDF -->
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 12px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap">lub wgraj PDF ręcznie</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div id="ipanel-pdf">
+      <div id="pdfjs-status" style="display:none;font-size:11px;padding:8px 10px;border-radius:var(--rs);margin-bottom:10px;font-family:var(--mono)"></div>
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="pdf-input" accept="*/*">
+        <div class="upload-icon">📄</div>
+        <div class="upload-label">Wybierz PDF z ewidencją</div>
+        <div class="upload-sub">Miesiąc i rok odczytane automatycznie z pliku</div>
+      </div>
+    </div>
+
+    <!-- Panel Auto -->
+    <div id="ipanel-auto">
+
+      <div id="auto-status" style="display:none;padding:10px 12px;border-radius:var(--rs);font-size:12px;margin-bottom:12px;font-family:var(--mono)"></div>
+
+      <div class="card">
+        <div class="card-title">Link do raportu</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">
+          Wklej link do swojego raportu. Zostanie zapamiętany i dane będą pobierane automatycznie.
+        </div>
+        <div class="frow">
+          <label class="flabel">URL raportu</label>
+          <input type="url" class="finput" id="report-url"
+            placeholder="https://produkcja.patentdruk.pl/raport/?worker=..."
+            style="font-size:11px">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn b-accent" style="margin:0" onclick="fetchReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+            Pobierz dane
+          </button>
+          <button class="btn" style="margin:0;padding:10px 14px;width:auto;font-size:12px" onclick="clearReportUrl()">✕</button>
+        </div>
+      </div>
+
+      <div id="auto-last" style="display:none" class="card">
+        <div class="card-title">Ostatnie pobieranie</div>
+        <div id="auto-last-info" style="font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.7"></div>
+      </div>
+
+    </div>
+
+    <!-- Panel JSON (bookmarklet) -->
+    <div id="ipanel-text" style="display:none">
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">Krok 1 — Zapisz zakładkę w przeglądarce</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7">
+          Skopiuj poniższy kod i zapisz go jako <strong style="color:var(--text)">nową zakładkę</strong> w przeglądarce
+          (nazwa: np. <em>"Pobierz ewidencję"</em>).
+          Na iOS: Menu → Zakładki → Edytuj → + → wklej jako adres URL.
+        </div>
+        <div id="bookmarklet-code" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:10px;font-size:10px;font-family:var(--mono);color:var(--accent);word-break:break-all;line-height:1.6;max-height:80px;overflow-y:auto;margin-bottom:8px;cursor:pointer" onclick="copyBookmarklet()" title="Kliknij aby skopiować">
+          Ładowanie…
+        </div>
+        <button class="btn" style="margin-bottom:0;font-size:12px" onclick="copyBookmarklet()">📋 Skopiuj kod zakładki</button>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">Krok 2 — Użyj zakładki na stronie pracy</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8">
+          1. Otwórz raport na stronie pracy w przeglądarce<br>
+          2. Kliknij/dotknij zapisaną zakładkę <strong style="color:var(--text)">"Pobierz ewidencję"</strong><br>
+          3. Plik <strong style="color:var(--green)">ewidencja.json</strong> pobierze się automatycznie<br>
+          4. Wróć tutaj i wgraj ten plik poniżej
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Krok 3 — Wgraj plik JSON</div>
+        <div class="upload-zone" id="json-upload-zone" style="padding:20px">
+          <input type="file" id="json-input" accept=".json,application/json,*/*">
+          <div class="upload-icon" style="font-size:24px">📥</div>
+          <div class="upload-label" style="font-size:13px">Wybierz plik ewidencja.json</div>
+        </div>
+      </div>
+
     </div>
     <div class="spinner" id="spinner"><span class="spin-ring"></span>Odczytuję PDF…</div>
     <div id="import-preview" style="display:none">
@@ -437,6 +521,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <button class="btn b-accent" onclick="saveSettings()">✓ Zapisz ustawienia</button>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Auto-pobieranie danych</div>
+      <div class="srow">
+        <div><div class="srow-label">Zapisany URL raportu</div><div class="srow-sub" id="saved-url-preview">Brak</div></div>
+        <button class="btn" style="width:auto;padding:6px 10px;margin:0;font-size:11px" onclick="switchTab('import');switchImportTab('auto')">Edytuj</button>
+      </div>
+      <div class="srow">
+        <div><div class="srow-label">Auto-pobierz przy starcie</div><div class="srow-sub">Odświeża dane przy każdym otwarciu</div></div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="s-auto-fetch" style="opacity:0;width:0;height:0" onchange="saveSettings()">
+          <span id="toggle-auto" style="position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:.2s">
+            <span id="toggle-auto-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:var(--text2);border-radius:50%;transition:.2s"></span>
+          </span>
+        </label>
+      </div>
+    </div>
     <div style="height:4px"></div>
     <button class="btn b-red" onclick="clearAll()">🗑 Wyczyść wszystkie dane</button>
   </div>
@@ -449,7 +549,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
    W PDF.js 2.x disableWorker=true działa w getDocument
 ══════════════════════════════════════════ */
 // Prawdziwy URL workera — pusty string na iOS Safari powoduje cichy błąd
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+// iOS Safari: używamy disableWorker:true w getDocument() więc workerSrc nie jest potrzebny
+// Ustawiamy pusty string żeby PDF.js nie próbował ładować workera z CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 const isAndroid = /Android/.test(navigator.userAgent);
@@ -489,22 +591,192 @@ function loadSettings(){
   document.getElementById('s-hol').value   = S.hol??2.0;
   document.getElementById('s-norm').value  = S.norm;
   document.getElementById('s-round').value = S.round;
+  updateToggleUI();
+  updateSavedUrlPreview();
 }
 loadSettings();
 
 function saveSettings(){
   S={
-    rate:  parseFloat(document.getElementById('s-rate').value)||35,
-    bonus: parseFloat(document.getElementById('s-bonus').value)||15,
-    sat:   parseFloat(document.getElementById('s-sat').value)||1.5,
-    sun:   parseFloat(document.getElementById('s-sun').value)||2.0,
-    hol:   parseFloat(document.getElementById('s-hol').value)||2.0,
-    norm:  parseFloat(document.getElementById('s-norm').value)||8,
-    round: parseFloat(document.getElementById('s-round').value)||0.5
+    rate:      parseFloat(document.getElementById('s-rate').value)||35,
+    bonus:     parseFloat(document.getElementById('s-bonus').value)||15,
+    sat:       parseFloat(document.getElementById('s-sat').value)||1.5,
+    sun:       parseFloat(document.getElementById('s-sun').value)||2.0,
+    hol:       parseFloat(document.getElementById('s-hol').value)||2.0,
+    norm:      parseFloat(document.getElementById('s-norm').value)||8,
+    round:     parseFloat(document.getElementById('s-round').value)||0.5,
+    autoFetch: document.getElementById('s-auto-fetch') ? document.getElementById('s-auto-fetch').checked : false
   };
   localStorage.setItem('wt_s',JSON.stringify(S));
+  updateToggleUI();
   showToast('✓ Ustawienia zapisane');
 }
+
+function updateToggleUI(){
+  var cb   = document.getElementById('s-auto-fetch');
+  var knob = document.getElementById('toggle-auto-knob');
+  var track= document.getElementById('toggle-auto');
+  if(!cb) return;
+  var on = S.autoFetch||false;
+  cb.checked=on;
+  if(track) track.style.background = on?'var(--green2)':'var(--border2)';
+  if(knob){knob.style.transform=on?'translateX(20px)':'translateX(0)';knob.style.background=on?'var(--green)':'var(--text2)';}
+}
+
+/* ════ AUTO-FETCH ════ */
+const REPORT_URL_KEY = 'wt_report_url';
+const REPORT_LAST_KEY = 'wt_report_last';
+
+function getSavedUrl(){ return localStorage.getItem(REPORT_URL_KEY)||''; }
+function saveReportUrl(url){ localStorage.setItem(REPORT_URL_KEY, url); }
+function clearReportUrl(){
+  localStorage.removeItem(REPORT_URL_KEY);
+  var el=document.getElementById('report-url');
+  if(el) el.value='';
+  updateSavedUrlPreview();
+  loadAutoPanel();
+  showToast('✓ URL usunięty');
+}
+
+function updateSavedUrlPreview(){
+  var el=document.getElementById('saved-url-preview');
+  if(!el) return;
+  var url=getSavedUrl();
+  el.textContent = url ? url.slice(0,50)+'…' : 'Brak';
+}
+
+function loadAutoPanel(){
+  var url=getSavedUrl();
+  var el=document.getElementById('report-url');
+  if(el && url) el.value=url;
+  updateSavedUrlPreview();
+  // Pokaż ostatnie pobieranie
+  var last=localStorage.getItem(REPORT_LAST_KEY);
+  var lastDiv=document.getElementById('auto-last');
+  var lastInfo=document.getElementById('auto-last-info');
+  if(last && lastDiv && lastInfo){
+    var d=JSON.parse(last);
+    lastDiv.style.display='';
+    lastInfo.innerHTML='Data: <strong style="color:var(--text)">'+d.date+'</strong><br>'+
+      'Miesiąc: <strong style="color:var(--accent)">'+d.monthName+' '+d.year+'</strong><br>'+
+      'Wpisów: <strong style="color:var(--green)">'+d.count+'</strong>';
+  }
+}
+
+function showAutoStatus(type, msg){
+  var el=document.getElementById('auto-status');
+  if(!el) return;
+  el.style.display='block';
+  el.style.background = type==='ok'?'#0e2018': type==='err'?'var(--red2)':'#14121e';
+  el.style.border = type==='ok'?'1px solid var(--green2)': type==='err'?'1px solid #5a2a2a':'1px solid var(--accent2)';
+  el.style.color = type==='ok'?'var(--green)': type==='err'?'var(--red)':'var(--accent)';
+  el.textContent = msg;
+}
+
+// Lista darmowych CORS proxy — próbujemy po kolei
+const CORS_PROXIES = [
+  function(url){ return 'https://api.allorigins.win/get?url='+encodeURIComponent(url); },
+  function(url){ return 'https://corsproxy.io/?'+encodeURIComponent(url); },
+  function(url){ return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url); }
+];
+
+// Fetch z ręcznym timeoutem (AbortSignal.timeout nie działa na starszym iOS)
+function fetchWithTimeout(url, ms){
+  return new Promise(function(resolve, reject){
+    var done=false;
+    var timer=setTimeout(function(){ if(!done){done=true;reject(new Error('Timeout ('+ms/1000+'s)'));} }, ms);
+    fetch(url,{mode:'cors',credentials:'omit'})
+      .then(function(r){ if(!done){done=true;clearTimeout(timer);resolve(r);} })
+      .catch(function(e){ if(!done){done=true;clearTimeout(timer);reject(e);} });
+  });
+}
+
+async function fetchWithProxy(targetUrl){
+  var errors=[];
+
+  // Próba bezpośrednia
+  showAutoStatus('info','⏳ Próba bezpośrednia…');
+  try{
+    var r=await fetchWithTimeout(targetUrl,6000);
+    if(r.ok){
+      var text=await r.text();
+      if(text&&text.length>100){showAutoStatus('info','⏳ Przetwarzam…');return text;}
+    }
+    errors.push('Bezpośrednia: HTTP '+r.status);
+  }catch(e){errors.push('Bezpośrednia: '+e.message);}
+
+  // Próby przez proxy
+  for(var i=0;i<CORS_PROXIES.length;i++){
+    var proxyUrl=CORS_PROXIES[i](targetUrl);
+    showAutoStatus('info','⏳ Proxy '+(i+1)+'/'+CORS_PROXIES.length+'…');
+    try{
+      var r2=await fetchWithTimeout(proxyUrl,12000);
+      if(!r2.ok){errors.push('Proxy '+(i+1)+': HTTP '+r2.status);continue;}
+      var raw=await r2.text();
+      var content=raw;
+      try{var p=JSON.parse(raw);if(p.contents)content=p.contents;}catch(e){}
+      if(content&&content.length>100){showAutoStatus('info','⏳ Przetwarzam…');return content;}
+      errors.push('Proxy '+(i+1)+': pusta odpowiedź');
+    }catch(e){errors.push('Proxy '+(i+1)+': '+e.message);}
+  }
+  throw new Error('Wszystkie próby nieudane:\n'+errors.join('\n'));
+}
+
+async function fetchReport(){
+  var urlInput=document.getElementById('report-url');
+  var url=(urlInput?urlInput.value.trim():'')||getSavedUrl();
+  if(!url){showAutoStatus('err','Wpisz URL raportu.');return;}
+  if(!url.startsWith('http')){showAutoStatus('err','URL musi zaczynać się od http:// lub https://');return;}
+
+  saveReportUrl(url);
+  updateSavedUrlPreview();
+  showAutoStatus('info','⏳ Łączę ze stroną pracy…');
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('import-preview').style.display='none';
+
+  try{
+    var htmlStr=await fetchWithProxy(url);
+    var result=parseReportHTML(htmlStr);
+    if(!result.entries.length){
+      document.getElementById('spinner').classList.remove('show');
+      showAutoStatus('err','Pobrano stronę ale nie znaleziono wpisów.\nSprawdź czy URL prowadzi do tabeli z raportem.');
+      return;
+    }
+    var norm=calcMonthNorm(result.year,result.month);
+    importedTmp=result.entries;
+    importedMeta={year:result.year,month:result.month,norm:norm};
+    document.getElementById('norm-override').value=norm;
+    renderPreview(result.entries,result.year,result.month,norm);
+    localStorage.setItem(REPORT_LAST_KEY,JSON.stringify({
+      date:new Date().toLocaleString('pl-PL'),year:result.year,month:result.month,
+      monthName:MONTHS_NAME[result.month]||'',count:result.entries.length
+    }));
+    document.getElementById('spinner').classList.remove('show');
+    document.getElementById('import-preview').style.display='block';
+    showAutoStatus('ok','✓ Pobrano '+result.entries.length+' wpisów — '+MONTHS_NAME[result.month]+' '+result.year+' (norma: '+norm+'h)');
+    loadAutoPanel();
+  }catch(err){
+    document.getElementById('spinner').classList.remove('show');
+    showAutoStatus('err','❌ Błąd:\n'+err.message);
+    console.error('fetchReport error:',err);
+  }
+}
+
+// Auto-fetch przy starcie jeśli włączony
+(function autoFetchOnLoad(){
+  if(!S.autoFetch) return;
+  var url=getSavedUrl();
+  if(!url) return;
+  // Odczekaj chwilę żeby UI się załadował
+  setTimeout(function(){
+    if(document.getElementById('screen-import').classList.contains('active')){
+      fetchReport();
+    } else {
+      showToast('⏳ Pobieram dane w tle…');
+      fetchReport().catch(function(){});
+    }
+  }, 800);
+})();
 
 /* ════ TABS ════ */
 function switchTab(n){
@@ -708,6 +980,192 @@ function entryPay(h,dateStr,dow,usedNorm,monthNorm){
   return n*S.rate+o*(S.rate+S.bonus);
 }
 
+/* ════ IMPORT SUB-TABS ════ */
+function switchImportTab(name){
+  // Auto i PDF są zawsze widoczne — przełączamy tylko JSON
+  var textTab   = document.getElementById('itab-text');
+  var textPanel = document.getElementById('ipanel-text');
+  var isText    = name==='text';
+
+  // Toggle — kliknięcie tej samej zakładki chowa panel
+  var currentlyOpen = textPanel && textPanel.style.display !== 'none';
+  if(isText && currentlyOpen){
+    if(textPanel) textPanel.style.display='none';
+    if(textTab)   textTab.classList.remove('active');
+    return;
+  }
+
+  if(textTab)   textTab.classList.toggle('active', isText);
+  if(textPanel) textPanel.style.display = isText ? '' : 'none';
+
+  if(name==='auto' || !isText) loadAutoPanel();
+}
+
+/* ════ BOOKMARKLET + JSON IMPORT ════ */
+
+// Bookmarklet — kod JS który użytkownik zapisuje jako zakładkę w przeglądarce.
+// Po kliknięciu na stronie pracy (produkcja.patentdruk.pl) czyta tabelę
+// i pobiera plik ewidencja.json gotowy do wgrania do trackera.
+function buildBookmarklet(){
+  var code = `javascript:(function(){
+  try{
+    var PL_MON={'sty':1,'lut':2,'mar':3,'kwi':4,'maj':5,'cze':6,'lip':7,'sie':8,'wrz':9,'paz':10,'lis':11,'gru':12};
+    function norm(s){return s.toLowerCase().replace(/\\u0105/g,'a').replace(/\\u0107/g,'c').replace(/\\u0119/g,'e').replace(/\\u0142/g,'l').replace(/\\u0144/g,'n').replace(/\\u00f3/g,'o').replace(/\\u015b/g,'s').replace(/\\u017a/g,'z').replace(/\\u017c/g,'z').replace(/\\u0104/g,'a').replace(/\\u0106/g,'c').replace(/\\u0118/g,'e').replace(/\\u0141/g,'l').replace(/\\u0143/g,'n').replace(/\\u00d3/g,'o').replace(/\\u015a/g,'s').replace(/\\u0179/g,'z').replace(/\\u017b/g,'z');}
+    var result={year:null,month:null,entries:[]};
+    // Wykryj rok i miesiąc z nagłówka strony lub z dat w tabeli
+    var allText=document.body.innerText||'';
+    var mY=allText.match(/([a-z\\u00c0-\\u017e]+)\\s+(20\\d{2})/i);
+    if(mY){var mn=PL_MON[norm(mY[1])];if(mn){result.month=mn;result.year=parseInt(mY[2]);}}
+    // Parsuj tabelę
+    var rows=document.querySelectorAll('table tr, [data-slot=table] tr');
+    rows.forEach(function(row){
+      var cells=row.querySelectorAll('td');
+      if(cells.length<2)return;
+      var dateCell=cells[0]?cells[0].innerText.trim():'';
+      // Wyciągnij numer dnia z daty np. "śr., 1 kwi 2026" → 1
+      var dayM=dateCell.match(/\\b(\\d{1,2})\\s+[a-z\\u00e0-\\u017e]{3}/i);
+      if(!dayM)return;
+      var lp=parseInt(dayM[1]);
+      if(lp<1||lp>31)return;
+      // Jeśli rok/miesiąc nie wykryty z nagłówka — wykryj z daty wiersza
+      if(!result.year){
+        var yM=dateCell.match(/(20\\d{2})/);
+        var moM=dateCell.match(/\\b([a-z\\u00e0-\\u017e]{3,})\\b/gi);
+        if(yM)result.year=parseInt(yM[1]);
+        if(moM){moM.forEach(function(w){var mn2=PL_MON[norm(w)];if(mn2)result.month=mn2;});}
+      }
+      // Znajdź wszystkie czasy HH:MM:SS w wierszu
+      var rowText=row.innerText||'';
+      var times=rowText.match(/\\b\\d{1,2}:\\d{2}:\\d{2}\\b/g)||[];
+      // Pomiń sumę godzin (pierwsza kolumna "Przebywał w pracy") — szukamy wejście/wyjście
+      // Z screenshota wiemy: col[1]=czas pracy, potem ikona+wejście, ikona+wyjście
+      // Bierzemy 2 pierwsze czasy które wyglądają jak wejście/wyjście (nie jak długość zmiany >14h to czas pracy)
+      var entryTimes=times.filter(function(t){var h=parseInt(t);return h>=3&&h<=23;});
+      if(entryTimes.length>=2){
+        result.entries.push({lp:lp,from:entryTimes[0],to:entryTimes[1]});
+      }
+    });
+    if(!result.entries.length){alert('Nie znaleziono danych w tabeli. Upewnij się że jesteś na stronie raportu.');return;}
+    // Pobierz jako JSON
+    var json=JSON.stringify(result,null,2);
+    var blob=new Blob([json],{type:'application/json'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='ewidencja_'+( result.year||'')+'_'+(result.month<10?'0':'')+( result.month||'')+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    alert('Pobrano: '+result.entries.length+' wpisów ('+(['','Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'][result.month]||'?')+' '+result.year+')');
+  }catch(e){alert('Błąd: '+e.message);}
+})();`;
+  return code;
+}
+
+function copyBookmarklet(){
+  var code = buildBookmarklet();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(function(){
+      showToast('✓ Skopiowano kod zakładki');
+    }).catch(function(){
+      fallbackCopy(code);
+    });
+  } else {
+    fallbackCopy(code);
+  }
+}
+
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); showToast('✓ Skopiowano'); }
+  catch(e){ showToast('Nie udało się skopiować — zaznacz tekst ręcznie'); }
+  document.body.removeChild(ta);
+}
+
+// Wyświetl skrócony podgląd bookmarkletu
+(function(){
+  var el=document.getElementById('bookmarklet-code');
+  if(el){
+    var code=buildBookmarklet();
+    el.textContent=code.slice(0,200)+'…';
+    el.title='Kliknij aby skopiować pełny kod ('+code.length+' znaków)';
+  }
+})();
+
+// JSON input handler
+(function(){
+  var jsonInput=document.getElementById('json-input');
+  var jsonZone=document.getElementById('json-upload-zone');
+  if(!jsonInput) return;
+
+  jsonInput.addEventListener('change',function(e){
+    var file=(e.target.files&&e.target.files[0])||(this.files&&this.files[0]);
+    if(!file){showAlertI('err','Nie wybrano pliku.');return;}
+    showAlertI('info','⏳ Wczytuję JSON…');
+    document.getElementById('spinner').classList.add('show');
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var data=JSON.parse(ev.target.result);
+        handleJSONData(data);
+      }catch(err){
+        document.getElementById('spinner').classList.remove('show');
+        showAlertI('err','Nieprawidłowy plik JSON: '+err.message);
+      }
+    };
+    reader.onerror=function(){
+      document.getElementById('spinner').classList.remove('show');
+      showAlertI('err','Błąd odczytu pliku.');
+    };
+    reader.readAsText(file);
+  });
+
+  if(jsonZone){
+    jsonZone.addEventListener('dragover',function(e){e.preventDefault();jsonZone.classList.add('drag');});
+    jsonZone.addEventListener('dragleave',function(){jsonZone.classList.remove('drag');});
+    jsonZone.addEventListener('drop',function(e){
+      e.preventDefault();jsonZone.classList.remove('drag');
+      var file=e.dataTransfer.files[0];
+      if(file){
+        var fakeEv={target:{files:[file]},files:[file]};
+        jsonInput.dispatchEvent(new Event('change'));
+      }
+    });
+  }
+})();
+
+function handleJSONData(data){
+  try{
+    var year=data.year, month=data.month;
+    if(!year||!month) throw new Error('Brak roku lub miesiąca w pliku.');
+    var rawEntries=data.entries||[];
+    if(!rawEntries.length) throw new Error('Brak wpisów w pliku.');
+
+    // Przelicz na format trackera
+    var entries=rawEntries.map(function(e){
+      var lp=e.lp;
+      var from=e.from||'', to=e.to||'';
+      var rawH=to?diffH(from,to):0;
+      var rounded=roundH(rawH);
+      var d=getDow(year,month,lp);
+      var dateStr=year+'-'+String(month).padStart(2,'0')+'-'+String(lp).padStart(2,'0');
+      return{lp:lp,from:from,to:to,rawH:rawH,rounded:rounded,dow:d,date:dateStr,type:'imported'};
+    }).filter(function(e){return e.rounded>0;});
+
+    if(!entries.length) throw new Error('Nie znaleziono wpisów z godzinami.');
+
+    var norm=calcMonthNorm(year,month);
+    importedTmp=entries; importedMeta={year:year,month:month,norm:norm};
+    document.getElementById('norm-override').value=norm;
+    renderPreview(entries,year,month,norm);
+    document.getElementById('spinner').classList.remove('show');
+    document.getElementById('import-preview').style.display='block';
+    showAlertI('ok','✓ Wczytano '+entries.length+' wpisów — '+MONTHS_NAME[month]+' '+year+' (norma: '+norm+'h)');
+  }catch(err){
+    document.getElementById('spinner').classList.remove('show');
+    showAlertI('err','Błąd: '+err.message);
+  }
+}
+
 /* ════════════════════════════════════════
    PDF PARSING — POZYCYJNY (iOS safe)
    Klucz: disableWorker:true + pozycje x/y
@@ -715,46 +1173,106 @@ function entryPay(h,dateStr,dow,usedNorm,monthNorm){
 const zone=document.getElementById('upload-zone');
 const pdfInput=document.getElementById('pdf-input');
 
+// Sprawdź czy PDF.js się załadował i pokaż status
+(function checkPDFJS(){
+  const el = document.getElementById('pdfjs-status');
+  if(!el) return;
+  if(typeof pdfjsLib !== 'undefined'){
+    // OK — ukryj status
+    el.style.display = 'none';
+  } else {
+    // Błąd ładowania — pokaż ostrzeżenie i zaproponuj alternatywę
+    el.style.display = 'block';
+    el.style.background = 'var(--red2)';
+    el.style.color = 'var(--red)';
+    el.style.border = '1px solid #5a2a2a';
+    el.textContent = '⚠️ Biblioteka PDF nie załadowała się (brak internetu?). Użyj zakładki "Wklej tekst".';
+    switchImportTab('text');
+  }
+})();
+
 // Podwójne bindowanie — onchange w HTML może nie zadziałać na iOS Safari
 // gdy plik jest udostępniany z innej aplikacji
-pdfInput.addEventListener('change', function(){ if(this.files[0]) handleFile(this.files[0]); });
+pdfInput.addEventListener('change', function(e){
+  // Natychmiastowy feedback — musi być synchronicznie w event handlerze
+  showAlertI('info','📂 Plik wybrany — odczytuję…');
+  document.getElementById('spinner').classList.add('show');
+
+  // Pobierz plik SYNCHRONICZNIE w event handlerze (iOS traci referencję poza nim)
+  const file = (e.target.files && e.target.files[0]) || (this.files && this.files[0]);
+
+  if(!file){
+    document.getElementById('spinner').classList.remove('show');
+    showAlertI('err','Nie udało się uzyskać dostępu do pliku. Spróbuj ponownie lub użyj zakładki "Wklej tekst".');
+    return;
+  }
+
+  // Sprawdź czy PDF.js się załadował
+  if(typeof pdfjsLib === 'undefined'){
+    document.getElementById('spinner').classList.remove('show');
+    showAlertI('err',
+      'Biblioteka PDF.js nie załadowała się (brak internetu lub blokada CDN). ' +
+      'Użyj zakładki "Wklej tekst" jako alternatywy.'
+    );
+    document.getElementById('pdfjs-status').style.display='none';
+    switchImportTab('text');
+    return;
+  }
+
+  handleFile(file);
+});
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
 zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
 
 async function handleFile(file){
-  if(!file){ showAlertI('err','Nie wybrano pliku.'); return; }
-  const name=(file.name||'').toLowerCase();
-  const type=file.type||'';
-  if(!name.endsWith('.pdf') && type!=='application/pdf' && type!=='application/octet-stream' && type!==''){
-    // Na iOS type może być pusty — akceptujemy każdy plik jeśli nie możemy zweryfikować
-    if(type !== ''){
-      showAlertI('err','Proszę wybrać plik PDF.'); return;
-    }
-  }
+  // Natychmiastowy feedback — użytkownik widzi że coś się dzieje
   hideAlertI();
   document.getElementById('spinner').classList.add('show');
   document.getElementById('import-preview').style.display='none';
 
+  // Krótki setTimeout żeby przeglądarka zdążyła wyrenderować spinner przed blokiem sync
+  await new Promise(r=>setTimeout(r,50));
+
   try{
-    // iOS-safe: FileReader (nie file.arrayBuffer() — problemy na Safari)
+    if(!file) throw new Error('Nie wybrano pliku.');
+
+    showAlertI('info','⏳ Odczytuję plik…');
+
+    // Krok 1: wczytaj plik przez FileReader (jedyna metoda działająca na iOS Safari)
     const ab = await new Promise((res,rej)=>{
       const r=new FileReader();
-      r.onload=e=>res(e.target.result);
-      r.onerror=()=>rej(new Error('Nie można odczytać pliku. Spróbuj ponownie.'));
+      r.onload=e=>{
+        if(e.target.result && e.target.result.byteLength > 0) res(e.target.result);
+        else rej(new Error('Plik jest pusty lub nie można go odczytać.'));
+      };
+      r.onerror=()=>rej(new Error('FileReader: błąd odczytu. Upewnij się że plik nie jest uszkodzony.'));
+      r.onabort=()=>rej(new Error('FileReader: odczyt przerwany.'));
       r.readAsArrayBuffer(file);
     });
-    const uint8=new Uint8Array(ab);
 
-    // Otwórz PDF — próbuj z workerem, przy błędzie bez workera
+    showAlertI('info','⏳ Przetwarzam PDF…');
+
+    // Krok 2: otwórz PDF — na iOS ZAWSZE disableWorker:true
+    // Worker wymaga osobnego pliku JS który iOS blokuje w kontekście lokalnym
+    const uint8 = new Uint8Array(ab);
     let pdf;
+    const pdfOpts = {
+      data: uint8,
+      disableWorker: true,      // kluczowe dla iOS
+      isEvalSupported: false,   // wymagane w Safari (CSP)
+      useSystemFonts: true,
+      verbosity: 0              // wycisz logi PDF.js
+    };
     try {
-      pdf = await pdfjsLib.getDocument({ data: uint8 }).promise;
+      pdf = await pdfjsLib.getDocument(pdfOpts).promise;
     } catch(e1) {
+      // Ostatnia szansa — bez żadnych opcji
       try {
-        pdf = await pdfjsLib.getDocument({ data: uint8, disableWorker: true, isEvalSupported: false }).promise;
+        pdf = await pdfjsLib.getDocument({ data: uint8, disableWorker: true }).promise;
       } catch(e2) {
-        throw new Error('Nie można otworzyć PDF ('+e2.message+'). Sprawdź czy plik nie jest zaszyfrowany.');
+        throw new Error('Nie można otworzyć PDF: '+e2.message+
+          '. Sprawdź czy plik nie jest zaszyfrowany lub zabezpieczony hasłem.');
       }
     }
 
