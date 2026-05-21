@@ -690,6 +690,76 @@ async function fetchWithProxy(targetUrl){
   return text;
 }
 
+function parseReportHTML(htmlStr){
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(htmlStr, 'text/html');
+
+  // Wykryj miesiąc i rok z tekstu strony
+  var bodyText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
+  var det = detectMonthYear(bodyText);
+  if(!det.year || !det.month){
+    det = detectMonthYear(htmlStr.replace(/<[^>]+>/g,' '));
+  }
+  if(!det.year || !det.month) throw new Error('Nie udało się odczytać miesiąca ze strony. Sprawdź czy URL jest poprawny.');
+
+  var year = det.year, month = det.month;
+  var entries = [];
+  var byLP = {};
+
+  // Szukaj wierszy tabeli
+  var rows = doc.querySelectorAll('tr');
+  rows.forEach(function(row){
+    var cells = row.querySelectorAll('td');
+    if(cells.length < 2) return;
+
+    // Pierwsza komórka zawiera datę np. "śr., 1 kwi 2026"
+    var dateText = (cells[0].innerText || cells[0].textContent || '').trim();
+    var dayM = dateText.match(/\b(\d{1,2})\s+[a-ząćęłńóśźżA-ZĄĆĘŁŃÓŚŹŻ]/);
+    if(!dayM) return;
+    var lp = parseInt(dayM[1]);
+    if(lp < 1 || lp > 31) return;
+
+    // Zbierz wszystkie czasy HH:MM:SS z wiersza
+    var rowText = row.innerText || row.textContent || '';
+    var allTimes = rowText.match(/\b\d{1,2}:\d{2}:\d{2}\b/g) || [];
+
+    // Filtruj: wejście i wyjście to godziny dnia (nie czas pracy > 16h)
+    var dayTimes = allTimes.filter(function(t){
+      return parseInt(t.split(':')[0]) <= 23;
+    });
+
+    // Pierwsze dwa czasy gdzie h1 < h2 to wejście/wyjście
+    // Pomiń pierwszy jeśli to czas pracy (wyjątkowo duży)
+    var entryExit = [];
+    for(var i = 0; i < dayTimes.length - 1; i++){
+      var h1 = parseInt(dayTimes[i].split(':')[0]);
+      var h2 = parseInt(dayTimes[i+1].split(':')[0]);
+      if(h1 >= 3 && h1 <= 12 && h2 >= 10 && h2 <= 23 && h2 > h1){
+        entryExit = [dayTimes[i], dayTimes[i+1]];
+        break;
+      }
+    }
+    // Fallback: weź ostatnie dwa czasy
+    if(!entryExit.length && dayTimes.length >= 2){
+      entryExit = [dayTimes[dayTimes.length-2], dayTimes[dayTimes.length-1]];
+    }
+
+    if(entryExit.length >= 2){
+      var from = entryExit[0], to = entryExit[1];
+      var rawH = diffH(from, to);
+      if(rawH > 0 && rawH <= 16 && !byLP[lp]){
+        var rounded = roundH(rawH);
+        var d = getDow(year, month, lp);
+        var dateStr = year+'-'+String(month).padStart(2,'0')+'-'+String(lp).padStart(2,'0');
+        byLP[lp] = {lp:lp, from:from, to:to, rawH:rawH, rounded:rounded, dow:d, date:dateStr, type:'imported'};
+      }
+    }
+  });
+
+  var result = Object.values(byLP).sort(function(a,b){ return a.lp - b.lp; });
+  return {year:year, month:month, entries:result};
+}
+
 async function fetchReport(){
   var urlInput=document.getElementById('report-url');
   var url=(urlInput?urlInput.value.trim():'')||getSavedUrl();
