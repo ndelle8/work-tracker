@@ -551,6 +551,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 // Prawdziwy URL workera — pusty string na iOS Safari powoduje cichy błąd
 // iOS Safari: używamy disableWorker:true w getDocument() więc workerSrc nie jest potrzebny
 // Ustawiamy pusty string żeby PDF.js nie próbował ładować workera z CDN
+var TIME_RE=/^\d{1,2}:\d{2}(:\d{2})?$/; // zadeklarowane na górze żeby uniknąć TDZ
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
@@ -728,21 +730,7 @@ async function fetchReport(){
   }
 }
 
-// Auto-fetch przy starcie jeśli włączony
-(function autoFetchOnLoad(){
-  if(!S.autoFetch) return;
-  var url=getSavedUrl();
-  if(!url) return;
-  // Odczekaj chwilę żeby UI się załadował
-  setTimeout(function(){
-    if(document.getElementById('screen-import').classList.contains('active')){
-      fetchReport();
-    } else {
-      showToast('⏳ Pobieram dane w tle…');
-      fetchReport().catch(function(){});
-    }
-  }, 800);
-})();
+// autoFetchOnLoad przeniesione na koniec skryptu
 
 /* ════ TABS ════ */
 function switchTab(n){
@@ -1352,7 +1340,6 @@ function detectMonthYear(txt){
 }
 
 /* ── Parser 1: pozycyjny (z wierszy x/y) ── */
-const TIME_RE=/^\d{1,2}:\d{2}(:\d{2})?$/;
 
 function parseRowsPositional(rows, year, month){
   const byLP={};
@@ -2081,6 +2068,24 @@ function clearAll(){
     const next=dx<0?Math.min(cur+1,TABS.length-1):Math.max(cur-1,0);
     if(next!==cur) switchTab(TABS[next]);
   },{passive:true});
+})();
+
+// Auto-fetch przy starcie — uruchamiamy PO załadowaniu wszystkich funkcji
+(function autoFetchOnLoad(){
+  if(!S.autoFetch) return;
+  var url=getSavedUrl();
+  if(!url) return;
+  setTimeout(function(){
+    try{
+      if(document.getElementById('screen-import') &&
+         document.getElementById('screen-import').classList.contains('active')){
+        fetchReport();
+      } else {
+        showToast('⏳ Pobieram dane w tle…');
+        fetchReport().catch(function(){});
+      }
+    }catch(e){ console.error('autoFetch error:',e); }
+  }, 1000);
 })();
 
 renderManList();
