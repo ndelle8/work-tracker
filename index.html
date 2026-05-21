@@ -691,15 +691,10 @@ async function fetchWithProxy(targetUrl){
 }
 
 function parseReportHTML(htmlStr){
-  // DIAGNOSTYKA — pokaż pierwsze 300 znaków tekstu ze strony
   var parser = new DOMParser();
   var doc = parser.parseFromString(htmlStr, 'text/html');
   var bodyText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
-  var preview = bodyText.replace(/\s+/g,' ').trim().slice(0,300);
-  console.log('=== HTML ze strony (tekst) ===');
-  console.log(preview);
-  console.log('=== Długość HTML ===', htmlStr.length);
-  showAutoStatus('info', '📋 Odczytano ze strony: "' + preview.slice(0,120) + '"');
+  var preview = bodyText.replace(/\s+/g,' ').trim().slice(0,200);
 
   // Wykryj miesiąc i rok z tekstu strony
   var bodyText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
@@ -707,7 +702,11 @@ function parseReportHTML(htmlStr){
   if(!det.year || !det.month){
     det = detectMonthYear(htmlStr.replace(/<[^>]+>/g,' '));
   }
-  if(!det.year || !det.month) throw new Error('Nie udało się odczytać miesiąca ze strony. Sprawdź czy URL jest poprawny.');
+  if(!det.year || !det.month) throw new Error(
+    'Nie udało się odczytać miesiąca.\n'+
+    'Długość HTML: '+htmlStr.length+' znaków\n'+
+    'Tekst strony: "'+preview.slice(0,150)+'"'
+  );
 
   var year = det.year, month = det.month;
   var entries = [];
