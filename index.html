@@ -566,7 +566,7 @@ let CE = JSON.parse(localStorage.getItem('wt_cur') || '[]');
 let MH = JSON.parse(localStorage.getItem('wt_hist')|| '{}');
 let importedTmp=[], importedMeta={year:null,month:null,norm:null};
 
-const MONTHS_PL={
+var MONTHS_PL={
   'styczen':1,'styczeń':1,'january':1,'jan':1,
   'luty':2,'lutego':2,'february':2,'feb':2,
   'marzec':3,'marca':3,'march':3,'mar':3,
@@ -580,9 +580,9 @@ const MONTHS_PL={
   'listopad':11,'listopada':11,'november':11,'nov':11,
   'grudzien':12,'grudzień':12,'grudnia':12,'december':12,'dec':12
 };
-const MONTHS_NAME=['','Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-const DOW=['Nd','Pn','Wt','Śr','Cz','Pt','Sb'];
-const DOW_COLOR={0:'var(--red)',6:'var(--amber)'};
+var MONTHS_NAME=['','Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+var DOW=['Nd','Pn','Wt','Śr','Cz','Pt','Sb'];
+var DOW_COLOR={0:'var(--red)',6:'var(--amber)'};
 
 /* ════ USTAWIENIA ════ */
 function loadSettings(){
@@ -626,8 +626,8 @@ function updateToggleUI(){
 }
 
 /* ════ AUTO-FETCH ════ */
-const REPORT_URL_KEY = 'wt_report_url';
-const REPORT_LAST_KEY = 'wt_report_last';
+var REPORT_URL_KEY = 'wt_report_url';
+var REPORT_LAST_KEY = 'wt_report_last';
 
 function getSavedUrl(){ return localStorage.getItem(REPORT_URL_KEY)||''; }
 function saveReportUrl(url){ localStorage.setItem(REPORT_URL_KEY, url); }
@@ -677,7 +677,7 @@ function showAutoStatus(type, msg){
 
 // Lista darmowych CORS proxy — próbujemy po kolei
 // Twój własny Cloudflare Worker — bez limitów i bez problemów z CORS
-const CF_WORKER = 'https://raport-proxy.ndelle8.workers.dev';
+var CF_WORKER = 'https://raport-proxy.ndelle8.workers.dev';
 
 async function fetchWithProxy(targetUrl){
   showAutoStatus('info','⏳ Pobieram dane przez proxy…');
@@ -785,8 +785,8 @@ function fixMobileTokens(tokens){
   //   mała  pl-litera (ą ę ń ś...) → koniec słowa → dołącz do POPRZEDNIEGO
   //   wielka pl-litera (Ł Ś Ź...)  → początek słowa → dołącz do NASTĘPNEGO
   //   mieszane (ść, cią itp.)      → środek słowa → dołącz do POPRZEDNIEGO
-  const PL_DIAC = /^[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/;
-  const STARTS_UPPER_PL = /^[ĄĆĘŁŃÓŚŹŻ]$/;
+  var PL_DIAC = /^[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/;
+  var STARTS_UPPER_PL = /^[ĄĆĘŁŃÓŚŹŻ]$/;
 
   const result = [];
   let i = 0;
@@ -874,7 +874,7 @@ function getHolidays(year){
   return set;
 }
 
-const HOLY_NAMES={
+var HOLY_NAMES={
   '01-01':'Nowy Rok','01-06':'Trzech Króli','05-01':'Święto Pracy',
   '05-03':'Święto Konstytucji','08-15':'Wniebowzięcie NMP',
   '11-01':'Wszystkich Świętych','11-11':'Święto Niepodległości',
@@ -2037,7 +2037,7 @@ function clearAll(){
 
 /* ════ SWIPE MIĘDZY TABAMI ════ */
 (function(){
-  const TABS=['import','manual','results','history','vacation','settings'];
+  var TABS=['import','manual','results','history','vacation','settings'];
   let tx=0, ty=0, swiping=false;
   const main=document.querySelector('.main');
 
