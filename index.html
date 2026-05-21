@@ -197,7 +197,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <div id="ipanel-pdf">
       <div id="pdfjs-status" style="display:none;font-size:11px;padding:8px 10px;border-radius:var(--rs);margin-bottom:10px;font-family:var(--mono)"></div>
       <div class="upload-zone" id="upload-zone">
-        <input type="file" id="pdf-input" accept="*/*">
+        <input type="file" id="pdf-input" accept="*/*" onchange="handlePdfFile(this)">
         <div class="upload-icon">📄</div>
         <div class="upload-label">Wybierz PDF z ewidencją</div>
         <div class="upload-sub">Miesiąc i rok odczytane automatycznie z pliku</div>
@@ -674,52 +674,18 @@ function showAutoStatus(type, msg){
 }
 
 // Lista darmowych CORS proxy — próbujemy po kolei
-const CORS_PROXIES = [
-  function(url){ return 'https://api.allorigins.win/get?url='+encodeURIComponent(url); },
-  function(url){ return 'https://corsproxy.io/?'+encodeURIComponent(url); },
-  function(url){ return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url); }
-];
-
-// Fetch z ręcznym timeoutem (AbortSignal.timeout nie działa na starszym iOS)
-function fetchWithTimeout(url, ms){
-  return new Promise(function(resolve, reject){
-    var done=false;
-    var timer=setTimeout(function(){ if(!done){done=true;reject(new Error('Timeout ('+ms/1000+'s)'));} }, ms);
-    fetch(url,{mode:'cors',credentials:'omit'})
-      .then(function(r){ if(!done){done=true;clearTimeout(timer);resolve(r);} })
-      .catch(function(e){ if(!done){done=true;clearTimeout(timer);reject(e);} });
-  });
-}
+// Twój własny Cloudflare Worker — bez limitów i bez problemów z CORS
+const CF_WORKER = 'https://raport-proxy.ndelle8.workers.dev';
 
 async function fetchWithProxy(targetUrl){
-  var errors=[];
-
-  // Próba bezpośrednia
-  showAutoStatus('info','⏳ Próba bezpośrednia…');
-  try{
-    var r=await fetchWithTimeout(targetUrl,6000);
-    if(r.ok){
-      var text=await r.text();
-      if(text&&text.length>100){showAutoStatus('info','⏳ Przetwarzam…');return text;}
-    }
-    errors.push('Bezpośrednia: HTTP '+r.status);
-  }catch(e){errors.push('Bezpośrednia: '+e.message);}
-
-  // Próby przez proxy
-  for(var i=0;i<CORS_PROXIES.length;i++){
-    var proxyUrl=CORS_PROXIES[i](targetUrl);
-    showAutoStatus('info','⏳ Proxy '+(i+1)+'/'+CORS_PROXIES.length+'…');
-    try{
-      var r2=await fetchWithTimeout(proxyUrl,12000);
-      if(!r2.ok){errors.push('Proxy '+(i+1)+': HTTP '+r2.status);continue;}
-      var raw=await r2.text();
-      var content=raw;
-      try{var p=JSON.parse(raw);if(p.contents)content=p.contents;}catch(e){}
-      if(content&&content.length>100){showAutoStatus('info','⏳ Przetwarzam…');return content;}
-      errors.push('Proxy '+(i+1)+': pusta odpowiedź');
-    }catch(e){errors.push('Proxy '+(i+1)+': '+e.message);}
-  }
-  throw new Error('Wszystkie próby nieudane:\n'+errors.join('\n'));
+  showAutoStatus('info','⏳ Pobieram dane przez proxy…');
+  var proxyUrl = CF_WORKER + '/?url=' + encodeURIComponent(targetUrl);
+  var response = await fetch(proxyUrl);
+  if(!response.ok) throw new Error('Serwer proxy zwrócił błąd HTTP ' + response.status);
+  var text = await response.text();
+  if(!text || text.length < 50) throw new Error('Pusta odpowiedź z serwera.');
+  showAutoStatus('info','⏳ Przetwarzam dane…');
+  return text;
 }
 
 async function fetchReport(){
@@ -1193,50 +1159,31 @@ const pdfInput=document.getElementById('pdf-input');
 
 // Podwójne bindowanie — onchange w HTML może nie zadziałać na iOS Safari
 // gdy plik jest udostępniany z innej aplikacji
-pdfInput.addEventListener('change', function(e){
-  // Natychmiastowy feedback — musi być synchronicznie w event handlerze
-  showAlertI('info','📂 Plik wybrany — odczytuję…');
-  document.getElementById('spinner').classList.add('show');
-
-  // Pobierz plik SYNCHRONICZNIE w event handlerze (iOS traci referencję poza nim)
-  const file = (e.target.files && e.target.files[0]) || (this.files && this.files[0]);
-
-  if(!file){
-    document.getElementById('spinner').classList.remove('show');
-    showAlertI('err','Nie udało się uzyskać dostępu do pliku. Spróbuj ponownie lub użyj zakładki "Wklej tekst".');
-    return;
-  }
-
-  // Sprawdź czy PDF.js się załadował
-  if(typeof pdfjsLib === 'undefined'){
-    document.getElementById('spinner').classList.remove('show');
-    showAlertI('err',
-      'Biblioteka PDF.js nie załadowała się (brak internetu lub blokada CDN). ' +
-      'Użyj zakładki "Wklej tekst" jako alternatywy.'
-    );
-    document.getElementById('pdfjs-status').style.display='none';
-    switchImportTab('text');
-    return;
-  }
-
-  handleFile(file);
+// Backup addEventListener (onchange w HTML jest główny)
+if(pdfInput) pdfInput.addEventListener('change', function(e){
+  handlePdfFile(this);
 });
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
 zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
 
-async function handleFile(file){
-  // Natychmiastowy feedback — użytkownik widzi że coś się dzieje
-  hideAlertI();
+function handlePdfFile(input){
+  var file = input && input.files && input.files[0];
+  if(!file){ showAlertI('err','Nie wybrano pliku.'); return; }
+  showAlertI('info','📂 Plik wybrany: '+file.name);
   document.getElementById('spinner').classList.add('show');
   document.getElementById('import-preview').style.display='none';
+  if(typeof pdfjsLib === 'undefined'){
+    document.getElementById('spinner').classList.remove('show');
+    showAlertI('err','Biblioteka PDF.js nie załadowała się. Odśwież stronę i spróbuj ponownie.');
+    return;
+  }
+  handleFile(file);
+}
 
-  // Krótki setTimeout żeby przeglądarka zdążyła wyrenderować spinner przed blokiem sync
-  await new Promise(r=>setTimeout(r,50));
-
+async function handleFile(file){
+  await new Promise(function(r){setTimeout(r,50);});
   try{
-    if(!file) throw new Error('Nie wybrano pliku.');
-
     showAlertI('info','⏳ Odczytuję plik…');
 
     // Krok 1: wczytaj plik przez FileReader (jedyna metoda działająca na iOS Safari)
