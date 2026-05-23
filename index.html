@@ -528,13 +528,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Dane pracownika</div>
-      <div class="srow">
-        <div><div class="srow-label">Imię i nazwisko</div><div class="srow-sub">Dokładnie jak w systemie pracy (np. Kut Krystian)</div></div>
-        <input type="text" class="sinput" id="s-person" style="width:160px;font-size:11px;text-align:left" placeholder="Jan Kowalski">
-      </div>
-    </div>
-    <div class="card">
       <div class="card-title">Stawki wynagrodzenia</div>
       <div class="srow"><div><div class="srow-label">Stawka podstawowa (zł/h)</div><div class="srow-sub">Norma miesięczna i baza weekendu</div></div><input type="number" class="sinput" id="s-rate" min="1" step="0.5"></div>
       <div class="srow"><div><div class="srow-label">Dopłata nadgodziny (zł/h)</div><div class="srow-sub">Dodawana do stawki → 35+15=50 zł/h</div></div><input type="number" class="sinput" id="s-bonus" min="0" step="0.5"></div>
@@ -576,6 +569,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <div class="toast" id="toast"></div>
 
 <script>
+
+/* ════ TABS ════ */
+function switchTab(n){
+  var tabNames=['import','manual','results','history','vacation','settings'];
+  var tabs=document.querySelectorAll('.tab');
+  tabNames.forEach(function(name,i){
+    if(tabs[i]) tabs[i].classList.toggle('active', name===n);
+  });
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active');
+  });
+  var screen=document.getElementById('screen-'+n);
+  if(screen) screen.classList.add('active');
+  if(n==='results')  renderResults();
+  if(n==='manual')   renderManList();
+  if(n==='history')  renderHistory();
+  if(n==='vacation') renderVacation();
+}
+
 /* ══════════════════════════════════════════
    PDF.js — wyłączamy worker (iOS safe)
    W PDF.js 2.x disableWorker=true działa w getDocument
@@ -748,26 +760,40 @@ async function fetchWithProxy(targetUrl){
   return text;
 }
 
-function buildSQL(personName, year, month){
-  // Format: SELECT * FROM operacje WHERE data BETWEEN 'YYYY-MM-01' AND 'YYYY-MM2-01' AND osoba = "Imię Nazwisko" AND przerwa_data != ''
+function buildSQL(year, month){
   var y1 = year, m1 = String(month).padStart(2,'0');
   var nextMonth = month === 12 ? 1 : month + 1;
   var nextYear  = month === 12 ? year + 1 : year;
   var m2 = String(nextMonth).padStart(2,'0');
-  return "SELECT * FROM operacje WHERE data BETWEEN '"+y1+"-"+m1+"-01' AND '"+nextYear+"-"+m2+"-01' AND osoba = \""+personName+"\" AND przerwa_data != ''";
+  // Bez filtra osoby — serwer zwróci dane dla wszystkich, my weźmiemy pierwszą osobę
+  return "SELECT * FROM operacje WHERE data BETWEEN '"+y1+"-"+m1+"-01' AND '"+nextYear+"-"+m2+"-01' AND przerwa_data != ''";
 }
 
 function parseApiJSON(data, year, month){
-  // data = tablica obiektów z nazwa "Wejście do pracy" / "Wyjście z pracy"
+  // Auto-wykryj osobę — znajdź najczęściej występującą
+  var personCount = {};
+  data.forEach(function(item){
+    var p = item.osoba||'';
+    if(p) personCount[p] = (personCount[p]||0) + 1;
+  });
+  var detectedPerson = Object.keys(personCount).sort(function(a,b){
+    return personCount[b]-personCount[a];
+  })[0] || '';
+
+  // Filtruj tylko wpisy tej osoby
+  var filtered = detectedPerson
+    ? data.filter(function(item){ return item.osoba === detectedPerson; })
+    : data;
+
   // Grupuj po dacie (YYYY-MM-DD)
   var byDay = {};
-  data.forEach(function(item){
+  filtered.forEach(function(item){
     var dt = item.data || item.przerwa_data || '';
     if(!dt) return;
-    var day = dt.slice(0,10); // YYYY-MM-DD
+    var day = dt.slice(0,10);
     if(!byDay[day]) byDay[day] = {entry:null, exit:null};
     var name = item.nazwa || '';
-    if(name.indexOf('Wej') >= 0) byDay[day].entry = dt.slice(11,19); // HH:MM:SS
+    if(name.indexOf('Wej') >= 0) byDay[day].entry = dt.slice(11,19);
     if(name.indexOf('Wyj') >= 0) byDay[day].exit  = dt.slice(11,19);
   });
 
@@ -793,12 +819,10 @@ async function fetchReport(){
   var monthSelect = document.getElementById('fetch-month');
   var yearInput   = document.getElementById('fetch-year');
   var url    = (urlInput ? urlInput.value.trim() : '') || getSavedUrl();
-  var person = S.personName || '';
   var month  = monthSelect ? parseInt(monthSelect.value) : new Date().getMonth()+1;
   var year   = yearInput   ? parseInt(yearInput.value)   : new Date().getFullYear();
 
   if(!url){ showAutoStatus('err','Wpisz URL raportu.'); return; }
-  if(!person){ showAutoStatus('err','Wpisz swoje imię i nazwisko w Ustawieniach (zakładka Ustawienia → Dane pracownika).'); return; }
 
   saveReportUrl(url);
   updateSavedUrlPreview();
@@ -808,7 +832,7 @@ async function fetchReport(){
 
   try{
     var apiUrl   = 'https://produkcja.patentdruk.pl/magiszonek/api.php?query';
-    var sql      = buildSQL(person, year, month);
+    var sql      = buildSQL(year, month);
     var proxyUrl = CF_WORKER + '/?url=' + encodeURIComponent(apiUrl);
 
     var resp = await fetch(proxyUrl, {
@@ -826,7 +850,7 @@ async function fetchReport(){
     if(!Array.isArray(data)) throw new Error('Nieoczekiwany format odpowiedzi: '+JSON.stringify(data).slice(0,100));
 
     var entries = parseApiJSON(data, year, month);
-    if(!entries.length) throw new Error('Nie znaleziono wpisów dla '+person+' za '+MONTHS_NAME[month]+' '+year+'. Sprawdź czy imię jest wpisane dokładnie tak jak w systemie.');
+    if(!entries.length) throw new Error('Nie znaleziono wpisów za '+MONTHS_NAME[month]+' '+year+'. Sprawdź czy URL jest poprawny i czy jest wybrana właściwa data.');
 
     var norm = calcMonthNorm(year, month);
     importedTmp  = entries;
