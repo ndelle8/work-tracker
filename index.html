@@ -524,7 +524,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
           <div class="srow-label">Imię i nazwisko</div>
           <div class="srow-sub">Dokładnie tak jak w systemie pracy</div>
         </div>
-        <input type="text" class="sinput" id="s-worker-name" placeholder="Jan Kowalski" style="width:140px;font-size:12px;text-align:left">
+        <input type="text" class="sinput" id="s-person" placeholder="Jan Kowalski" style="width:140px;font-size:12px;text-align:left">
       </div>
     </div>
     <div class="card">
@@ -605,7 +605,7 @@ const isAndroid = /Android/.test(navigator.userAgent);
 if(isIOS) document.getElementById('ios-tip').style.display='block';
 
 /* ════ DANE ════ */
-let S  = JSON.parse(localStorage.getItem('wt_s')  || '{"rate":35,"bonus":15,"sat":1.5,"sun":2.0,"hol":2.0,"norm":8,"round":0.5}');
+let S  = JSON.parse(localStorage.getItem('wt_s')  || '{"rate":35,"bonus":15,"sat":1.5,"sun":2.0,"hol":2.0,"norm":8,"round":0.5,"personName":""}');
 let CE = JSON.parse(localStorage.getItem('wt_cur') || '[]');
 let MH = JSON.parse(localStorage.getItem('wt_hist')|| '{}');
 let importedTmp=[], importedMeta={year:null,month:null,norm:null};
@@ -637,8 +637,8 @@ function loadSettings(){
   document.getElementById('s-hol').value   = S.hol??2.0;
   document.getElementById('s-norm').value  = S.norm;
   document.getElementById('s-round').value = S.round;
-  var wnEl = document.getElementById('s-worker-name');
-  if(wnEl) wnEl.value = S.workerName||'';
+  var wnEl = document.getElementById('s-person');
+  if(wnEl) wnEl.value = S.personName||'';
   updateToggleUI();
   updateSavedUrlPreview();
 }
@@ -718,7 +718,7 @@ function loadAutoPanel(){
 
   // Ostrzeżenie jeśli brak nazwy pracownika
   var warn=document.getElementById('auto-name-warn');
-  if(warn) warn.style.display = (S.workerName||'').trim() ? 'none' : '';
+  if(warn) warn.style.display = (S.personName||'').trim() ? 'none' : '';
 
   // Pokaż ostatnie pobieranie
   var last=localStorage.getItem(REPORT_LAST_KEY);
@@ -859,6 +859,20 @@ async function fetchReport(){
     showAutoStatus('err','❌ Błąd: '+err.message);
     console.error('fetchReport error:', err);
   }
+}
+
+function handlePdfFile(input){
+  var file = input && input.files && input.files[0];
+  if(!file){ showAlertI('err','Nie wybrano pliku.'); return; }
+  showAlertI('info','⏳ Plik wybrany: '+file.name+' ('+Math.round(file.size/1024)+' kB)');
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('import-preview').style.display='none';
+  if(typeof pdfjsLib === 'undefined'){
+    document.getElementById('spinner').classList.remove('show');
+    showAlertI('err','Biblioteka PDF.js nie załadowała się. Odśwież stronę i spróbuj ponownie.');
+    return;
+  }
+  handleFile(file);
 }
 
 async function handleFile(file){
