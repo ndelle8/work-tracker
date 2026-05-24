@@ -760,14 +760,14 @@ async function fetchWithProxy(targetUrl){
   return text;
 }
 
-function buildSQL(person, year, month){
+function buildSQL(year, month){
   var m1 = String(month).padStart(2,"0");
   var nm = month===12?1:month+1;
   var ny = month===12?year+1:year;
   var m2 = String(nm).padStart(2,"0");
   return "SELECT * FROM operacje WHERE data BETWEEN " +
     "'"+year+"-"+m1+"-01' AND '"+ny+"-"+m2+"-01'" +
-    " AND osoba = \""+person+"\" AND przerwa_data != ''";
+    " AND przerwa_data != ''";
 }
 
 function parseApiJSON(data, year, month){
@@ -805,22 +805,20 @@ async function fetchReport(){
   var monthSelect = document.getElementById('fetch-month');
   var yearInput   = document.getElementById('fetch-year');
   var url    = (urlInput ? urlInput.value.trim() : '') || getSavedUrl();
-  var person = S.personName || '';
   var month  = monthSelect ? parseInt(monthSelect.value) : new Date().getMonth()+1;
   var year   = yearInput   ? parseInt(yearInput.value)   : new Date().getFullYear();
 
-  if(!url){    showAutoStatus('err','Wpisz URL raportu (zakładka ⚡ Auto).'); return; }
-  if(!person){ showAutoStatus('err','Wpisz imie i nazwisko w Ustawieniach (np. Kut Krystian).'); return; }
+  if(!url){ showAutoStatus('err','Wpisz URL raportu.'); return; }
 
   saveReportUrl(url);
   updateSavedUrlPreview();
-  showAutoStatus('info','⏳ Pobieram dane za '+MONTHS_NAME[month]+' '+year+' dla: '+person+'…');
+  showAutoStatus('info','⏳ Pobieram dane za '+MONTHS_NAME[month]+' '+year+'…');
   document.getElementById('spinner').classList.add('show');
   document.getElementById('import-preview').style.display='none';
 
   try{
     var apiUrl   = 'https://produkcja.patentdruk.pl/magiszonek/api.php?query';
-    var sql      = buildSQL(person, year, month);
+    var sql      = buildSQL(year, month);
     var proxyUrl = CF_WORKER + '/?url=' + encodeURIComponent(apiUrl);
 
     var resp = await fetch(proxyUrl, {
@@ -838,7 +836,7 @@ async function fetchReport(){
     if(!Array.isArray(data)) throw new Error('Nieoczekiwany format odpowiedzi: '+JSON.stringify(data).slice(0,100));
 
     var entries = parseApiJSON(data, year, month);
-    if(!entries.length) throw new Error('Nie znaleziono wpisów za '+MONTHS_NAME[month]+' '+year+'. Sprawdź czy URL jest poprawny i czy jest wybrana właściwa data.');
+    if(!entries.length) throw new Error('Nie znaleziono wpisów za '+MONTHS_NAME[month]+' '+year+'. Sprawdź czy URL i data są poprawne.');
 
     var norm = calcMonthNorm(year, month);
     importedTmp  = entries;
@@ -859,6 +857,35 @@ async function fetchReport(){
     showAutoStatus('err','❌ Błąd: '+err.message);
     console.error('fetchReport error:', err);
   }
+}
+
+/* ════ NAPRAWA TOKENÓW PDF.js (mobile) ════ */
+function fixMobileTokens(tokens){
+  var PL_DIAC = /^[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/;
+  var STARTS_UPPER_PL = /^[ĄĆĘŁŃÓŚŹŻ]$/;
+  var result = [];
+  var i = 0;
+  while(i < tokens.length){
+    var t = tokens[i];
+    if(PL_DIAC.test(t)){
+      if(STARTS_UPPER_PL.test(t) && i+1 < tokens.length && /^[a-z]/.test(tokens[i+1])){
+        result.push(t + tokens[i+1]);
+        i += 2;
+      } else if(result.length > 0){
+        result[result.length-1] += t;
+        i++;
+      } else {
+        result.push(t); i++;
+      }
+    } else {
+      result.push(t); i++;
+    }
+  }
+  return result;
+}
+
+function repairPageText(rawTokens){
+  return fixMobileTokens(rawTokens).join(' ');
 }
 
 function handlePdfFile(input){
