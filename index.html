@@ -182,101 +182,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       📱 <strong>iOS / Safari:</strong> Pobierz PDF na telefon, następnie tutaj wybierz go z folderu <em>Pobrane</em> (Pliki → Pobrane). Jeśli iOS otwiera PDF zamiast przesłać — przytrzymaj plik palcem i wybierz „Udostępnij → Skopiuj do…" lub użyj Pliki.
     </div>
     <div id="alert-import" class="alert"></div>
-    <!-- Przełącznik JSON (Auto i PDF zawsze widoczne) -->
-    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-      <button id="itab-text" class="sub-tab" style="flex:none;width:auto;padding:6px 14px"
-        onclick="switchImportTab('text')">🔗 JSON / Zakładka</button>
-    </div>
-
-    <!-- Panel PDF -->
-    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 12px">
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap">lub wgraj PDF ręcznie</span>
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-    </div>
-    <div id="ipanel-pdf">
-      <div id="pdfjs-status" style="display:none;font-size:11px;padding:8px 10px;border-radius:var(--rs);margin-bottom:10px;font-family:var(--mono)"></div>
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" id="pdf-input" accept="*/*" onchange="handlePdfFile(this)">
-        <div class="upload-icon">📄</div>
-        <div class="upload-label">Wybierz PDF z ewidencją</div>
-        <div class="upload-sub">Miesiąc i rok odczytane automatycznie z pliku</div>
-      </div>
-    </div>
-
-    <!-- Panel Auto -->
-    <div id="ipanel-auto">
-
-      <div id="auto-status" style="display:none;padding:10px 12px;border-radius:var(--rs);font-size:12px;margin-bottom:12px;font-family:var(--mono)"></div>
-
-      <div class="card">
-        <div class="card-title">Połączenie z systemem pracy</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">
-          Wklej link do raportu. Dane pobierane bezpośrednio z systemu pracy.
-        </div>
-        <div class="frow">
-          <label class="flabel">URL raportu</label>
-          <input type="url" class="finput" id="report-url" placeholder="https://produkcja.patentdruk.pl/raport/?worker=..." style="font-size:11px">
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
-          <span>Miesiąc: <strong id="fetch-month-display" style="color:var(--accent)">—</strong></span>
-          <div style="display:flex;gap:4px">
-            <button class="btn" style="margin:0;padding:4px 10px;font-size:14px;width:auto" onclick="changeMonth(-1)">◀</button>
-            <button class="btn" style="margin:0;padding:4px 10px;font-size:14px;width:auto" onclick="changeMonth(1)">▶</button>
-          </div>
-        </div>
-        <input type="hidden" id="fetch-month"><input type="hidden" id="fetch-year">
-        <div style="display:flex;gap:8px">
-          <button class="btn b-accent" style="margin:0" onclick="fetchReport()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-            Pobierz dane
-          </button>
-          <button class="btn" style="margin:0;padding:10px 14px;width:auto;font-size:12px" onclick="clearReportUrl()">✕</button>
-        </div>
-      </div>
-
-      <div id="auto-last" style="display:none" class="card">
-        <div class="card-title">Ostatnie pobieranie</div>
-        <div id="auto-last-info" style="font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.7"></div>
-      </div>
-
-    </div>
-
-    <!-- Panel JSON (bookmarklet) -->
-    <div id="ipanel-text" style="display:none">
-
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">Krok 1 — Zapisz zakładkę w przeglądarce</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7">
-          Skopiuj poniższy kod i zapisz go jako <strong style="color:var(--text)">nową zakładkę</strong> w przeglądarce
-          (nazwa: np. <em>"Pobierz ewidencję"</em>).
-          Na iOS: Menu → Zakładki → Edytuj → + → wklej jako adres URL.
-        </div>
-        <div id="bookmarklet-code" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:10px;font-size:10px;font-family:var(--mono);color:var(--accent);word-break:break-all;line-height:1.6;max-height:80px;overflow-y:auto;margin-bottom:8px;cursor:pointer" onclick="copyBookmarklet()" title="Kliknij aby skopiować">
-          Ładowanie…
-        </div>
-        <button class="btn" style="margin-bottom:0;font-size:12px" onclick="copyBookmarklet()">📋 Skopiuj kod zakładki</button>
-      </div>
-
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">Krok 2 — Użyj zakładki na stronie pracy</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.8">
-          1. Otwórz raport na stronie pracy w przeglądarce<br>
-          2. Kliknij/dotknij zapisaną zakładkę <strong style="color:var(--text)">"Pobierz ewidencję"</strong><br>
-          3. Plik <strong style="color:var(--green)">ewidencja.json</strong> pobierze się automatycznie<br>
-          4. Wróć tutaj i wgraj ten plik poniżej
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Krok 3 — Wgraj plik JSON</div>
-        <div class="upload-zone" id="json-upload-zone" style="padding:20px">
-          <input type="file" id="json-input" accept=".json,application/json,*/*">
-          <div class="upload-icon" style="font-size:24px">📥</div>
-          <div class="upload-label" style="font-size:13px">Wybierz plik ewidencja.json</div>
-        </div>
-      </div>
-
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="pdf-input" accept="*/*" onchange="handleFile(this.files[0])">
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">Wybierz PDF z ewidencją</div>
+      <div class="upload-sub">Miesiąc i rok odczytane automatycznie z pliku</div>
     </div>
     <div class="spinner" id="spinner"><span class="spin-ring"></span>Odczytuję PDF…</div>
     <div id="import-preview" style="display:none">
@@ -371,7 +281,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div class="card">
         <div class="card-title">Szczegóły rozliczenia</div>
         <div class="srow"><div><div class="srow-label">Stawka podstawowa</div></div><div class="sum-val" id="rv-rate">—</div></div>
-        <div class="srow"><div><div class="srow-label">Norma miesięczna</div></div><div class="sum-val" id="rv-norm-total">—</div></div>
+        <div class="srow"><div><div class="srow-label">Norma dzienna / miesięczna</div></div><div class="sum-val" id="rv-norm-total">—</div></div>
         <div class="srow"><div><div class="srow-label">Godziny normalne (pn–pt)</div></div><div class="sum-val" id="rv-norm-h">—</div></div>
         <div class="srow"><div><div class="srow-label">Wypłata za normę</div></div><div class="sum-val" id="rv-norm-pay">—</div></div>
         <div class="srow"><div><div class="srow-label">Nadgodziny pn–pt (+<span id="rv-bonus">—</span> zł/h)</div></div><div class="sum-val amber" id="rv-over-h">—</div></div>
@@ -508,14 +418,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
   <!-- ═══ USTAWIENIA ═══ -->
   <div id="screen-settings" class="screen">
-    
-    <div class="card">
-      <div class="card-title">Dane pracownika</div>
-      <div class="srow">
-        <div><div class="srow-label">Imię i nazwisko</div><div class="srow-sub">Jak w systemie pracy — do filtrowania danych</div></div>
-        <input type="text" class="sinput" id="s-person" style="width:160px;font-size:11px;text-align:left" placeholder="Jan Kowalski">
-      </div>
-    </div>
     <div class="card">
       <div class="card-title">Stawki wynagrodzenia</div>
       <div class="srow"><div><div class="srow-label">Stawka podstawowa (zł/h)</div><div class="srow-sub">Norma miesięczna i baza weekendu</div></div><input type="number" class="sinput" id="s-rate" min="1" step="0.5"></div>
@@ -535,123 +437,32 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <button class="btn b-accent" onclick="saveSettings()">✓ Zapisz ustawienia</button>
-    <div class="card" style="margin-top:0">
-      <div class="card-title">Auto-pobieranie danych</div>
-      <div class="srow">
-        <div><div class="srow-label">Zapisany URL raportu</div><div class="srow-sub" id="saved-url-preview">Brak</div></div>
-        <button class="btn" style="width:auto;padding:6px 10px;margin:0;font-size:11px" onclick="switchTab('import');switchImportTab('auto')">Edytuj</button>
-      </div>
-      <div class="srow">
-        <div><div class="srow-label">Auto-pobierz przy starcie</div><div class="srow-sub">Odświeża dane przy każdym otwarciu</div></div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px">
-          <input type="checkbox" id="s-auto-fetch" style="opacity:0;width:0;height:0" onchange="saveSettings()">
-          <span id="toggle-auto" style="position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:.2s">
-            <span id="toggle-auto-knob" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:var(--text2);border-radius:50%;transition:.2s"></span>
-          </span>
-        </label>
-      </div>
-    </div>
     <div style="height:4px"></div>
     <button class="btn b-red" onclick="clearAll()">🗑 Wyczyść wszystkie dane</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- Modal pierwszego uruchomienia -->
-<div id="setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px;max-width:360px;width:100%">
-    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">👋 Witaj w Work Tracker!</div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-      Wpisz swoje imię i nazwisko <strong style="color:var(--text)">dokładnie tak jak widnieje w systemie pracy</strong>
-      (np. Kut Krystian). Potrzebne tylko raz — zostanie zapamiętane.
-    </div>
-    <div class="frow">
-      <label class="flabel">Imię i nazwisko</label>
-      <input type="text" class="finput" id="setup-name" placeholder="Jan Kowalski"
-        style="font-size:14px" onkeydown="if(event.key==='Enter') confirmSetup()">
-    </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6">
-      Używane wyłącznie do filtrowania Twoich danych z systemu. Nie jest nigdzie wysyłane.
-    </div>
-    <button class="btn b-accent" style="margin:0" onclick="confirmSetup()">
-      ✓ Zapamiętaj i zacznij
-    </button>
-  </div>
-</div>
-
 <script>
-
-/* ════ SETUP — PIERWSZE URUCHOMIENIE ════ */
-function checkFirstSetup(){
-  if(!(S.personName||'').trim()){
-    var modal = document.getElementById('setup-modal');
-    if(modal) modal.style.display = 'flex';
-    setTimeout(function(){
-      var inp = document.getElementById('setup-name');
-      if(inp) inp.focus();
-    }, 100);
-  }
-}
-
-function confirmSetup(){
-  var inp = document.getElementById('setup-name');
-  var name = inp ? inp.value.trim() : '';
-  if(!name){
-    inp.style.borderColor='var(--red)';
-    inp.placeholder='Wpisz imię i nazwisko!';
-    return;
-  }
-  S.personName = name;
-  localStorage.setItem('wt_s', JSON.stringify(S));
-  var modal = document.getElementById('setup-modal');
-  if(modal) modal.style.display = 'none';
-  showToast('✓ Witaj, '+name+'!');
-  // Zaktualizuj pole w ustawieniach jeśli istnieje
-  var sEl = document.getElementById('s-person');
-  if(sEl) sEl.value = name;
-}
-
-/* ════ TABS ════ */
-function switchTab(n){
-  var tabNames=['import','manual','results','history','vacation','settings'];
-  var tabs=document.querySelectorAll('.tab');
-  tabNames.forEach(function(name,i){
-    if(tabs[i]) tabs[i].classList.toggle('active', name===n);
-  });
-  document.querySelectorAll('.screen').forEach(function(s){
-    s.classList.remove('active');
-  });
-  var screen=document.getElementById('screen-'+n);
-  if(screen) screen.classList.add('active');
-  if(n==='results')  renderResults();
-  if(n==='manual')   renderManList();
-  if(n==='history')  renderHistory();
-  if(n==='vacation') renderVacation();
-}
-
 /* ══════════════════════════════════════════
    PDF.js — wyłączamy worker (iOS safe)
    W PDF.js 2.x disableWorker=true działa w getDocument
 ══════════════════════════════════════════ */
 // Prawdziwy URL workera — pusty string na iOS Safari powoduje cichy błąd
-// iOS Safari: używamy disableWorker:true w getDocument() więc workerSrc nie jest potrzebny
-// Ustawiamy pusty string żeby PDF.js nie próbował ładować workera z CDN
-var TIME_RE=/^\d{1,2}:\d{2}(:\d{2})?$/; // zadeklarowane na górze żeby uniknąć TDZ
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+const isAndroid = /Android/.test(navigator.userAgent);
 
-var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-var isAndroid = /Android/.test(navigator.userAgent);
-
-var iosTipEl=document.getElementById('ios-tip'); if(isIOS && iosTipEl) iosTipEl.style.display='block';
+if(isIOS) document.getElementById('ios-tip').style.display='block';
 
 /* ════ DANE ════ */
-let S  = JSON.parse(localStorage.getItem('wt_s')  || '{"rate":35,"bonus":15,"sat":1.5,"sun":2.0,"hol":2.0,"norm":8,"round":0.5,"personName":""}');
+let S  = JSON.parse(localStorage.getItem('wt_s')  || '{"rate":35,"bonus":15,"sat":1.5,"sun":2.0,"hol":2.0,"norm":8,"round":0.5}');
 let CE = JSON.parse(localStorage.getItem('wt_cur') || '[]');
 let MH = JSON.parse(localStorage.getItem('wt_hist')|| '{}');
 let importedTmp=[], importedMeta={year:null,month:null,norm:null};
 
-var MONTHS_PL={
+const MONTHS_PL={
   'styczen':1,'styczeń':1,'january':1,'jan':1,
   'luty':2,'lutego':2,'february':2,'feb':2,
   'marzec':3,'marca':3,'march':3,'mar':3,
@@ -665,9 +476,9 @@ var MONTHS_PL={
   'listopad':11,'listopada':11,'november':11,'nov':11,
   'grudzien':12,'grudzień':12,'grudnia':12,'december':12,'dec':12
 };
-var MONTHS_NAME=['','Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-var DOW=['Nd','Pn','Wt','Śr','Cz','Pt','Sb'];
-var DOW_COLOR={0:'var(--red)',6:'var(--amber)'};
+const MONTHS_NAME=['','Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+const DOW=['Nd','Pn','Wt','Śr','Cz','Pt','Sb'];
+const DOW_COLOR={0:'var(--red)',6:'var(--amber)'};
 
 /* ════ USTAWIENIA ════ */
 function loadSettings(){
@@ -678,296 +489,95 @@ function loadSettings(){
   document.getElementById('s-hol').value   = S.hol??2.0;
   document.getElementById('s-norm').value  = S.norm;
   document.getElementById('s-round').value = S.round;
-  var wnEl = document.getElementById('s-person');
-  if(wnEl) wnEl.value = S.personName||'';
-  updateToggleUI();
-  updateSavedUrlPreview();
 }
 loadSettings();
 
 function saveSettings(){
   S={
-    rate:       parseFloat(document.getElementById('s-rate').value)||35,
-    bonus:      parseFloat(document.getElementById('s-bonus').value)||15,
-    sat:        parseFloat(document.getElementById('s-sat').value)||1.5,
-    sun:        parseFloat(document.getElementById('s-sun').value)||2.0,
-    hol:        parseFloat(document.getElementById('s-hol').value)||2.0,
-    norm:       parseFloat(document.getElementById('s-norm').value)||8,
-    round:      parseFloat(document.getElementById('s-round').value)||0.5,
-    autoFetch:  document.getElementById('s-auto-fetch') ? document.getElementById('s-auto-fetch').checked : false,
-    personName: (document.getElementById('s-person')||{value:''}).value.trim()
+    rate:  parseFloat(document.getElementById('s-rate').value)||35,
+    bonus: parseFloat(document.getElementById('s-bonus').value)||15,
+    sat:   parseFloat(document.getElementById('s-sat').value)||1.5,
+    sun:   parseFloat(document.getElementById('s-sun').value)||2.0,
+    hol:   parseFloat(document.getElementById('s-hol').value)||2.0,
+    norm:  parseFloat(document.getElementById('s-norm').value)||8,
+    round: parseFloat(document.getElementById('s-round').value)||0.5
   };
   localStorage.setItem('wt_s',JSON.stringify(S));
-  updateToggleUI();
   showToast('✓ Ustawienia zapisane');
 }
 
-function updateToggleUI(){
-  var cb   = document.getElementById('s-auto-fetch');
-  var knob = document.getElementById('toggle-auto-knob');
-  var track= document.getElementById('toggle-auto');
-  if(!cb) return;
-  var on = S.autoFetch||false;
-  cb.checked=on;
-  if(track) track.style.background = on?'var(--green2)':'var(--border2)';
-  if(knob){knob.style.transform=on?'translateX(20px)':'translateX(0)';knob.style.background=on?'var(--green)':'var(--text2)';}
-}
-
-/* ════ AUTO-FETCH ════ */
-var REPORT_URL_KEY = 'wt_report_url';
-var REPORT_LAST_KEY = 'wt_report_last';
-
-function getSavedUrl(){ return localStorage.getItem(REPORT_URL_KEY)||''; }
-function saveReportUrl(url){ localStorage.setItem(REPORT_URL_KEY, url); }
-function clearReportUrl(){
-  localStorage.removeItem(REPORT_URL_KEY);
-  var el=document.getElementById('report-url');
-  if(el) el.value='';
-  updateSavedUrlPreview();
-  loadAutoPanel();
-  showToast('✓ URL usunięty');
-}
-
-function updateSavedUrlPreview(){
-  var el=document.getElementById('saved-url-preview');
-  if(!el) return;
-  var url=getSavedUrl();
-  el.textContent = url ? url.slice(0,50)+'…' : 'Brak';
-}
-
-var _fetchMonth = new Date().getMonth()+1;
-var _fetchYear  = new Date().getFullYear();
-
-function changeMonth(delta){
-  _fetchMonth += delta;
-  if(_fetchMonth > 12){ _fetchMonth=1; _fetchYear++; }
-  if(_fetchMonth < 1){  _fetchMonth=12; _fetchYear--; }
-  updateMonthDisplay();
-}
-
-function updateMonthDisplay(){
-  var el = document.getElementById('fetch-month-display');
-  if(el) el.textContent = MONTHS_NAME[_fetchMonth]+' '+_fetchYear;
-  var mh = document.getElementById('fetch-month');
-  var yh = document.getElementById('fetch-year');
-  if(mh) mh.value = _fetchMonth;
-  if(yh) yh.value = _fetchYear;
-}
-
-function loadAutoPanel(){
-  var url=getSavedUrl();
-  var el=document.getElementById('report-url');
-  if(el && url) el.value=url;
-  // Pokaż bieżący miesiąc w labelu
-  var now = new Date();
-  var lbl = document.getElementById('fetch-month-label');
-  if(lbl) lbl.textContent = MONTHS_NAME[now.getMonth()+1] + ' ' + now.getFullYear();
-  updateSavedUrlPreview();
-
-  // Wypełnij select miesięcy
-  var mSel=document.getElementById('fetch-month');
-  if(mSel && !mSel.options.length){
-    var mn=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-    mn.forEach(function(n,i){ mSel.add(new Option(n,i+1)); });
-    mSel.value=new Date().getMonth()+1;
-  }
-  var yEl=document.getElementById('fetch-year');
-  if(yEl && !yEl.value) yEl.value=new Date().getFullYear();
-
-  // Ostrzeżenie jeśli brak nazwy pracownika
-  var warn=document.getElementById('auto-name-warn');
-  if(warn) warn.style.display = (S.personName||'').trim() ? 'none' : '';
-
-  // Pokaż ostatnie pobieranie
-  var last=localStorage.getItem(REPORT_LAST_KEY);
-  var lastDiv=document.getElementById('auto-last');
-  var lastInfo=document.getElementById('auto-last-info');
-  if(last && lastDiv && lastInfo){
-    try{
-      var d=JSON.parse(last);
-      lastDiv.style.display='';
-      lastInfo.innerHTML='Data: <strong style="color:var(--text)">'+d.date+'</strong><br>'+
-        'Miesiąc: <strong style="color:var(--accent)">'+d.monthName+' '+d.year+'</strong><br>'+
-        'Wpisów: <strong style="color:var(--green)">'+d.count+'</strong>';
-    }catch(e){}
-  }
-}
-
-function showAutoStatus(type, msg){
-  var el=document.getElementById('auto-status');
-  if(!el) return;
-  el.style.display='block';
-  el.style.background = type==='ok'?'#0e2018': type==='err'?'var(--red2)':'#14121e';
-  el.style.border = type==='ok'?'1px solid var(--green2)': type==='err'?'1px solid #5a2a2a':'1px solid var(--accent2)';
-  el.style.color = type==='ok'?'var(--green)': type==='err'?'var(--red)':'var(--accent)';
-  el.textContent = msg;
-}
-
-// Lista darmowych CORS proxy — próbujemy po kolei
-// Twój własny Cloudflare Worker — bez limitów i bez problemów z CORS
-var CF_WORKER = 'https://raport-proxy.ndelle8.workers.dev';
-
-async function fetchWithProxy(targetUrl){
-  showAutoStatus('info','⏳ Pobieram dane przez proxy…');
-  var proxyUrl = CF_WORKER + '/?url=' + encodeURIComponent(targetUrl);
-  var response = await fetch(proxyUrl);
-  if(!response.ok) throw new Error('Serwer proxy zwrócił błąd HTTP ' + response.status);
-  var text = await response.text();
-  if(!text || text.length < 50) throw new Error('Pusta odpowiedź z serwera.');
-  showAutoStatus('info','⏳ Przetwarzam dane…');
-  return text;
-}
-
-function buildSQL(year, month){
-  var m1 = String(month).padStart(2,'0');
-  var nm = month===12?1:month+1;
-  var ny = month===12?year+1:year;
-  var m2 = String(nm).padStart(2,'0');
-  var person = (S.personName||'').trim();
-  var q = "SELECT * FROM operacje WHERE data BETWEEN '"
-    +year+"-"+m1+"-01' AND '"+ny+"-"+m2+"-01'"
-    +" AND przerwa_data != ''";
-  if(person){
-    q += " AND osoba = \""+person+"\"";
-  }
-  return q;
-}
-
-function parseApiJSON(data, year, month){
-  if(!data || !data.length) return [];
-
-  // Jeśli dane zawierają wielu pracowników — weź tego z największą liczbą wpisów
-  // (to jest zalogowany użytkownik)
-  var personCount = {};
-  data.forEach(function(item){
-    var p = item.osoba||'';
-    if(p) personCount[p] = (personCount[p]||0)+1;
+/* ════ TABS ════ */
+function switchTab(n){
+  ['import','manual','results','history','vacation','settings'].forEach((name,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',name===n);
   });
-  var persons = Object.keys(personCount);
-  var mainPerson = persons.length > 1
-    ? persons.sort(function(a,b){ return personCount[b]-personCount[a]; })[0]
-    : (persons[0]||'');
-
-  // Filtruj dane tylko tej osoby
-  var myData = mainPerson
-    ? data.filter(function(i){ return i.osoba===mainPerson; })
-    : data;
-
-  // Grupuj po dacie — wejście/wyjście
-  var byDay = {};
-  myData.forEach(function(item){
-    var dt = item.data||'';
-    if(!dt) return;
-    var day = dt.slice(0,10);
-    if(!byDay[day]) byDay[day]={entry:null,exit:null};
-    var name = item.nazwa||'';
-    if(name.indexOf('Wej')>=0) byDay[day].entry = dt.slice(11,19);
-    if(name.indexOf('Wyj')>=0) byDay[day].exit  = dt.slice(11,19);
-  });
-
-  var entries = [];
-  Object.keys(byDay).sort().forEach(function(dateStr){
-    var d = byDay[dateStr];
-    if(!d.entry||!d.exit) return;
-    var parts = dateStr.split('-');
-    var lp = parseInt(parts[2]);
-    var y  = parseInt(parts[0]);
-    var m  = parseInt(parts[1]);
-    if(y!==year||m!==month) return;
-    var rawH    = diffH(d.entry, d.exit);
-    var rounded = roundH(rawH);
-    if(rawH<=0||rawH>20) return; // sanity check
-    var dow = getDow(y,m,lp);
-    entries.push({lp:lp,from:d.entry,to:d.exit,rawH:rawH,rounded:rounded,dow:dow,date:dateStr,type:'imported'});
-  });
-  return entries;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+  if(n==='results')  renderResults();
+  if(n==='manual')   renderManList();
+  if(n==='history')  renderHistory();
+  if(n==='vacation') renderVacation();
 }
 
-async function fetchReport(){
-  var urlInput    = document.getElementById('report-url');
-  var monthSelect = document.getElementById('fetch-month');
-  var yearInput   = document.getElementById('fetch-year');
-  var url    = (urlInput ? urlInput.value.trim() : '') || getSavedUrl();
-  // Zawsze bieżący miesiąc
-  var now    = new Date();
-  var month  = now.getMonth() + 1;
-  var year   = now.getFullYear();
-
-  if(!url){ showAutoStatus('err','Wpisz URL raportu.'); return; }
-
-  saveReportUrl(url);
-  updateSavedUrlPreview();
-  showAutoStatus('info','⏳ Pobieram dane za '+MONTHS_NAME[month]+' '+year+(S.personName?' dla: '+S.personName:'')+'…');
-  document.getElementById('spinner').classList.add('show');
-  document.getElementById('import-preview').style.display='none';
-
-  try{
-    var apiUrl   = 'https://produkcja.patentdruk.pl/magiszonek/api.php?query';
-    var sql      = buildSQL(year, month);
-    var proxyUrl = CF_WORKER + '/?url=' + encodeURIComponent(apiUrl);
-
-    var resp = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: sql
-    });
-
-    if(!resp.ok) throw new Error('Serwer zwrócił błąd HTTP '+resp.status);
-    var text = await resp.text();
-    var data;
-    try{ data = JSON.parse(text); }
-    catch(e){ throw new Error('Odpowiedź nie jest JSON. Odpowiedź: '+text.slice(0,100)); }
-
-    if(!Array.isArray(data)) throw new Error('Nieoczekiwany format odpowiedzi: '+JSON.stringify(data).slice(0,100));
-
-    var entries = parseApiJSON(data, year, month);
-    if(!entries.length) throw new Error('Nie znaleziono wpisów za '+MONTHS_NAME[month]+' '+year+'. Sprawdź czy URL i data są poprawne.');
-
-    var norm = calcMonthNorm(year, month);
-    importedTmp  = entries;
-    importedMeta = {year:year, month:month, norm:norm};
-    document.getElementById('norm-override').value = norm;
-    renderPreview(entries, year, month, norm);
-    localStorage.setItem(REPORT_LAST_KEY, JSON.stringify({
-      date: new Date().toLocaleString('pl-PL'), year:year, month:month,
-      monthName: MONTHS_NAME[month]||'', count: entries.length
-    }));
-    document.getElementById('spinner').classList.remove('show');
-    document.getElementById('import-preview').style.display = 'block';
-    showAutoStatus('ok','✓ Pobrano '+entries.length+' wpisów — '+MONTHS_NAME[month]+' '+year+' (norma: '+norm+'h)');
-    loadAutoPanel();
-
-  }catch(err){
-    document.getElementById('spinner').classList.remove('show');
-    showAutoStatus('err','❌ Błąd: '+err.message);
-    console.error('fetchReport error:', err);
-  }
+/* ════ UTILS ════ */
+function roundH(h){
+  const thr=S.round||0.5,fl=Math.floor(h),fr=h-fl;
+  if(fr<thr) return fl;
+  if(fr<0.5+thr) return fl+0.5;
+  return fl+1;
 }
+function t2h(s){ if(!s||!s.includes(':'))return 0; const p=s.split(':').map(Number); return p[0]+p[1]/60+(p[2]||0)/3600; }
+function fmtH(h){ if(!h)return'0h'; return(h%1===0?h:h.toFixed(1))+'h'; }
+function fmtPLN(n){ return Math.round(n).toLocaleString('pl-PL')+' zł'; }
+function getDow(y,m,d){ return new Date(y,m-1,d).getDay(); }
+function normalize(s){ return s.toLowerCase().replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z'); }
 
-/* ════ FUNKCJE POMOCNICZE ════ */
-function normalize(str){
-  return str.toLowerCase()
-    .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l')
-    .replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s')
-    .replace(/ź/g,'z').replace(/ż/g,'z')
-    .replace(/Ą/g,'a').replace(/Ć/g,'c').replace(/Ę/g,'e').replace(/Ł/g,'l')
-    .replace(/Ń/g,'n').replace(/Ó/g,'o').replace(/Ś/g,'s')
-    .replace(/Ź/g,'z').replace(/Ż/g,'z');
+/* ════ MIGRACJA STARYCH DANYCH ════ */
+// Naprawia wpisy które mają type: undefined/null (zapisane starą wersją kodu)
+function migrateEntries(entries){
+  return entries.map(e=>({
+    ...e,
+    type: e.type || (e.from ? 'imported' : 'normal')
+  }));
 }
-
-/* ════ NAPRAWA TOKENÓW PDF.js (mobile) ════ */
+CE = migrateEntries(CE);
+// Napraw też wpisy w historii
+Object.keys(MH).forEach(k=>{
+  if(MH[k].entries) MH[k].entries = migrateEntries(MH[k].entries);
+});
+localStorage.setItem('wt_cur', JSON.stringify(CE));
+localStorage.setItem('wt_hist', JSON.stringify(MH));
+// PDF.js na Android/iOS rozbija polskie litery na osobne tokeny:
+// "Kwiecień" → ["Kwiecie","ń"]  "Łukasz" → ["Ł","ukasz"]  "wyjścia" → ["wyj","ś","cia"]
+// Funkcja skleja z powrotem całe słowa przed dalszym przetwarzaniem
 function fixMobileTokens(tokens){
-  var PL_DIAC = /^[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/;
-  var STARTS_UPPER_PL = /^[ĄĆĘŁŃÓŚŹŻ]$/;
-  var result = [];
-  var i = 0;
+  // PDF.js na Android/iOS rozbija polskie litery na osobne tokeny ze spacją.
+  // Wzorzec: każdy token który jest TYLKO polskimi znakami diakrytycznymi
+  // należy skleić z sąsiednim tokenem.
+  //
+  // Zasada:
+  //   mała  pl-litera (ą ę ń ś...) → koniec słowa → dołącz do POPRZEDNIEGO
+  //   wielka pl-litera (Ł Ś Ź...)  → początek słowa → dołącz do NASTĘPNEGO
+  //   mieszane (ść, cią itp.)      → środek słowa → dołącz do POPRZEDNIEGO
+  const PL_DIAC = /^[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/;
+  const STARTS_UPPER_PL = /^[ĄĆĘŁŃÓŚŹŻ]$/;
+
+  const result = [];
+  let i = 0;
   while(i < tokens.length){
-    var t = tokens[i];
+    const t = tokens[i];
     if(PL_DIAC.test(t)){
       if(STARTS_UPPER_PL.test(t) && i+1 < tokens.length && /^[a-z]/.test(tokens[i+1])){
+        // Wielka PL litera przed małą łacińską → prepend do następnego
+        // "Ł" + "ukasz" → "Łukasz"
         result.push(t + tokens[i+1]);
         i += 2;
       } else if(result.length > 0){
+        // Mała PL litera lub grup like "ść" → append do poprzedniego
+        // "Kwiecie" + "ń" → "Kwiecień"
+        // "przyj" + "ś" → "przyjś",  potem "przyjś" + "cia" → ale "cia" nie jest PL!
+        // "cia" zostanie doklejone osobno — to nie jest problem bo detectMonthYear
+        // i tak normalizuje całe słowo
         result[result.length-1] += t;
         i++;
       } else {
@@ -980,63 +590,187 @@ function fixMobileTokens(tokens){
   return result;
 }
 
+// Skleja cały tekst strony — łączy tokeny, naprawia rozbite polskie słowa
 function repairPageText(rawTokens){
-  return fixMobileTokens(rawTokens).join(' ');
+  const fixed = fixMobileTokens(rawTokens);
+  return fixed.join(' ');
 }
 
-function handlePdfFile(input){
-  var file = input && input.files && input.files[0];
-  if(!file){ showAlertI('err','Nie wybrano pliku.'); return; }
-  showAlertI('info','⏳ Plik wybrany: '+file.name+' ('+Math.round(file.size/1024)+' kB)');
-  document.getElementById('spinner').classList.add('show');
-  document.getElementById('import-preview').style.display='none';
-  if(typeof pdfjsLib === 'undefined'){
-    document.getElementById('spinner').classList.remove('show');
-    showAlertI('err','Biblioteka PDF.js nie załadowała się. Odśwież stronę i spróbuj ponownie.');
-    return;
+function detectMonthYear(txt){
+  // Normalizuj do NFC — iOS Safari zwraca NFD
+  try { txt = txt.normalize('NFC'); } catch(e){}
+
+  // Podejście 1: słowo po słowie
+  const words = txt.split(/\s+/);
+  for(let i = 0; i < words.length-1; i++){
+    const w    = words[i].replace(/[.,!?;:()\[\]]/g,'');
+    const next = words[i+1].replace(/[.,!?;:()\[\]]/g,'');
+    if(/^20\d{2}$/.test(next)){
+      const mn = MONTHS_PL[normalize(w)];
+      if(mn) return {year:parseInt(next), month:mn};
+    }
   }
-  handleFile(file);
+
+  // Podejście 2: regex ogólny
+  const re = /(\S+)\s+(20\d{2})/g;
+  let m;
+  while((m = re.exec(txt)) !== null){
+    const mn = MONTHS_PL[normalize(m[1].replace(/[.,!?;:]/g,''))];
+    const yr = parseInt(m[2]);
+    if(mn && yr) return {year:yr, month:mn};
+  }
+
+  return {year:null, month:null};
 }
+
+/* ════ POLSKIE ŚWIĘTA ════ */
+function easterDate(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4;
+  const f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30;
+  const i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7;
+  const m2=Math.floor((a+11*h+22*l)/451);
+  const mo=Math.floor((h+l-7*m2+114)/31);
+  const da=((h+l-7*m2+114)%31)+1;
+  return{month:mo,day:da};
+}
+
+function getHolidays(year){
+  const{month:em,day:ed}=easterDate(year);
+  const easter=new Date(year,em-1,ed);
+  const easterMon=new Date(easter); easterMon.setDate(ed+1);
+  const corpus=new Date(easter); corpus.setDate(ed+60);
+  const fmt=dt=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  const set=new Set([
+    `${year}-01-01`,`${year}-01-06`,`${year}-05-01`,`${year}-05-03`,
+    `${year}-08-15`,`${year}-11-01`,`${year}-11-11`,`${year}-12-25`,`${year}-12-26`,
+    fmt(easter),fmt(easterMon),fmt(corpus)
+  ]);
+  return set;
+}
+
+const HOLY_NAMES={
+  '01-01':'Nowy Rok','01-06':'Trzech Króli','05-01':'Święto Pracy',
+  '05-03':'Święto Konstytucji','08-15':'Wniebowzięcie NMP',
+  '11-01':'Wszystkich Świętych','11-11':'Święto Niepodległości',
+  '12-25':'Boże Narodzenie','12-26':'Drugi dzień Bożego Narodzenia'
+};
+
+function getHolyName(dateStr){
+  const[y,m,d]=dateStr.split('-').map(Number);
+  const key=`${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  if(HOLY_NAMES[key]) return HOLY_NAMES[key];
+  const{month:em,day:ed}=easterDate(y);
+  const check=new Date(y,m-1,d);
+  const diff=Math.round((check-new Date(y,em-1,ed))/(86400000));
+  if(diff===0)return'Wielkanoc';if(diff===1)return'Poniedziałek Wielkanocny';if(diff===60)return'Boże Ciało';
+  return'Święto';
+}
+
+function isHoly(dateStr){ if(!dateStr)return false; const[y]=dateStr.split('-').map(Number); return getHolidays(y).has(dateStr); }
+
+/* ════ NORMA ════ */
+function calcMonthNorm(y,m){
+  const H=getHolidays(y);
+  const days=new Date(y,m,0).getDate();
+  let wd=0;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const w=new Date(y,m-1,d).getDay();
+    if(w>=1&&w<=5&&!H.has(ds)) wd++;
+  }
+  return wd*(S.norm||8);
+}
+
+function monthBreakdown(y,m){
+  const H=getHolidays(y);
+  const days=new Date(y,m,0).getDate();
+  let wd=0,sat=0,sun=0,holy=0;
+  const holyList=[];
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const w=new Date(y,m-1,d).getDay();
+    if(H.has(ds)){holy++;holyList.push(`${getHolyName(ds)} (${d})`);}
+    else if(w===6)sat++;
+    else if(w===0)sun++;
+    else wd++;
+  }
+  return{wd,sat,sun,holy,holyList};
+}
+
+/* ════ WYNAGRODZENIE ════
+   Model dzienny z długiem:
+   - Każdy dzień roboczy: pierwsze S.norm h = stawka podstawowa, reszta = nadgodziny
+   - Jeśli h < S.norm → dług rośnie o niedobór
+   - Dług jest odejmowany z przyszłych nadgodzin zanim zostaną wypłacone po wyższej stawce
+   - debt: obiekt { value } przekazywany przez referencję
+*/
+function entryPay(h, dateStr, dow, debt){
+  if(!h) return 0;
+  if(isHoly(dateStr)) return h * S.rate * (S.hol ?? 2);
+  if(dow === 6) return h * S.rate * S.sat;
+  if(dow === 0) return h * S.rate * S.sun;
+  const daily = S.norm;
+  const rawOver = h - daily;
+  if(rawOver <= 0){
+    // Krótki dzień — dług rośnie, płać wszystko po stawce podstawowej
+    debt.value += (-rawOver);
+    return h * S.rate;
+  } else {
+    // Długi dzień — nadgodziny najpierw spłacają dług
+    const used = Math.min(rawOver, debt.value);
+    debt.value = Math.max(0, debt.value - rawOver);
+    const paidOver = rawOver - used;
+    return daily * S.rate + used * S.rate + paidOver * (S.rate + S.bonus);
+  }
+}
+
+/* ════════════════════════════════════════
+   PDF PARSING — POZYCYJNY (iOS safe)
+   Klucz: disableWorker:true + pozycje x/y
+════════════════════════════════════════ */
+const zone=document.getElementById('upload-zone');
+const pdfInput=document.getElementById('pdf-input');
+
+// Podwójne bindowanie — onchange w HTML może nie zadziałać na iOS Safari
+// gdy plik jest udostępniany z innej aplikacji
+pdfInput.addEventListener('change', function(){ if(this.files[0]) handleFile(this.files[0]); });
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
 
 async function handleFile(file){
-  await new Promise(function(r){setTimeout(r,50);});
-  try{
-    showAlertI('info','⏳ Odczytuję plik…');
+  if(!file){ showAlertI('err','Nie wybrano pliku.'); return; }
+  const name=(file.name||'').toLowerCase();
+  const type=file.type||'';
+  if(!name.endsWith('.pdf') && type!=='application/pdf' && type!=='application/octet-stream' && type!==''){
+    // Na iOS type może być pusty — akceptujemy każdy plik jeśli nie możemy zweryfikować
+    if(type !== ''){
+      showAlertI('err','Proszę wybrać plik PDF.'); return;
+    }
+  }
+  hideAlertI();
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('import-preview').style.display='none';
 
-    // Krok 1: wczytaj plik przez FileReader (jedyna metoda działająca na iOS Safari)
+  try{
+    // iOS-safe: FileReader (nie file.arrayBuffer() — problemy na Safari)
     const ab = await new Promise((res,rej)=>{
       const r=new FileReader();
-      r.onload=e=>{
-        if(e.target.result && e.target.result.byteLength > 0) res(e.target.result);
-        else rej(new Error('Plik jest pusty lub nie można go odczytać.'));
-      };
-      r.onerror=()=>rej(new Error('FileReader: błąd odczytu. Upewnij się że plik nie jest uszkodzony.'));
-      r.onabort=()=>rej(new Error('FileReader: odczyt przerwany.'));
+      r.onload=e=>res(e.target.result);
+      r.onerror=()=>rej(new Error('Nie można odczytać pliku. Spróbuj ponownie.'));
       r.readAsArrayBuffer(file);
     });
+    const uint8=new Uint8Array(ab);
 
-    showAlertI('info','⏳ Przetwarzam PDF…');
-
-    // Krok 2: otwórz PDF — na iOS ZAWSZE disableWorker:true
-    // Worker wymaga osobnego pliku JS który iOS blokuje w kontekście lokalnym
-    const uint8 = new Uint8Array(ab);
+    // Otwórz PDF — próbuj z workerem, przy błędzie bez workera
     let pdf;
-    const pdfOpts = {
-      data: uint8,
-      disableWorker: true,      // kluczowe dla iOS
-      isEvalSupported: false,   // wymagane w Safari (CSP)
-      useSystemFonts: true,
-      verbosity: 0              // wycisz logi PDF.js
-    };
     try {
-      pdf = await pdfjsLib.getDocument(pdfOpts).promise;
+      pdf = await pdfjsLib.getDocument({ data: uint8 }).promise;
     } catch(e1) {
-      // Ostatnia szansa — bez żadnych opcji
       try {
-        pdf = await pdfjsLib.getDocument({ data: uint8, disableWorker: true }).promise;
+        pdf = await pdfjsLib.getDocument({ data: uint8, disableWorker: true, isEvalSupported: false }).promise;
       } catch(e2) {
-        throw new Error('Nie można otworzyć PDF: '+e2.message+
-          '. Sprawdź czy plik nie jest zaszyfrowany lub zabezpieczony hasłem.');
+        throw new Error('Nie można otworzyć PDF ('+e2.message+'). Sprawdź czy plik nie jest zaszyfrowany.');
       }
     }
 
@@ -1169,6 +903,7 @@ function detectMonthYear(txt){
 }
 
 /* ── Parser 1: pozycyjny (z wierszy x/y) ── */
+const TIME_RE=/^\d{1,2}:\d{2}(:\d{2})?$/;
 
 function parseRowsPositional(rows, year, month){
   const byLP={};
@@ -1236,7 +971,7 @@ function renderPreview(list,year,month,norm){
   document.getElementById('prev-badge').textContent=MONTHS_NAME[month]+' '+year;
   const{wd,holy,holyList}=monthBreakdown(year,month);
   document.getElementById('norm-info-box').innerHTML=
-    `Norma: <strong>${wd} dni rob.</strong> × ${S.norm}h = <strong>${norm}h</strong>`+
+    `Model dzienny: <strong>${S.norm}h</strong> podstawa / dzień · nadgodziny od ${S.norm}h · niedobory kompensowane z nadgodzin`+
     (holy?` <span class="viol">· ${holy} świąt</span>`:'')+`<br>`+
     `Stawki: <strong>${S.rate} zł/h</strong> norm · <strong>${S.rate+S.bonus} zł/h</strong> nadg. · `+
     `<strong>${(S.rate*S.sat).toFixed(2)}</strong> sob. · <strong>${(S.rate*S.sun).toFixed(2)}</strong> nd. · `+
@@ -1244,19 +979,30 @@ function renderPreview(list,year,month,norm){
     (holyList.length?`<br><span class="viol">🎄 ${holyList.join(', ')}</span>`:'');
 
   const tbody=document.getElementById('prev-tbody');
-  let usedNorm=0,totalH=0,totalPay=0;
+  let totalH=0, totalPay=0;
+  const debt={value:0};
   tbody.innerHTML=list.map(e=>{
-    const h=e.rounded,d=e.dow,holy=isHoly(e.date);
-    const pay=entryPay(h,e.date,d,usedNorm,norm);
-    if(!holy&&d!==0&&d!==6) usedNorm+=Math.min(h,Math.max(0,norm-usedNorm));
+    const h=e.rounded, d=e.dow, holy=isHoly(e.date);
+    const isSat=d===6, isSun=d===0, isWD=!holy&&!isSat&&!isSun;
+    // Zapamiętaj dług przed tym dniem, żeby wyliczyć faktyczne nadgodziny w tym wpisie
+    const debtBefore=debt.value;
+    const pay=entryPay(h, e.date, d, debt);
     totalH+=h; totalPay+=pay;
-    const isSat=d===6,isSun=d===0,isOver=!isSat&&!isSun&&!holy&&h>S.norm;
+    // Faktyczne nadgodziny = część ponad normę dzienną po odjęciu długu
+    const rawOver=isWD?Math.max(0,h-S.norm):0;
+    const used=isWD?Math.min(rawOver,debtBefore):0;
+    const actualOver=rawOver-used;
+    const isOver=actualOver>0;
     const pillCls=holy?'pill-holy':isSun?'pill-sun':isSat?'pill-sat':isOver?'pill-over':'pill-ok';
     const dc=holy?'var(--violet)':DOW_COLOR[d]||'var(--text2)';
+    const overLabel=isOver?` <span style="font-size:9px;color:var(--amber);font-family:var(--mono)">+${fmtH(actualOver)} nad.</span>`:'';
+    // Pokaż dług (niedobór) przy krótkich dniach roboczych
+    const debtAdded=isWD&&h<S.norm?(S.norm-h):0;
+    const debtLabel=debtAdded>0?` <span style="font-size:9px;color:var(--text3);font-family:var(--mono)">-${fmtH(debtAdded)}</span>`:'';
     return `<tr class="${(isSat||isSun)?'wknd':''} ${holy?'holy':''}">
       <td><span style="color:${dc};font-weight:500">${e.lp} ${DOW[d]}</span>${holy?` <span style="color:var(--violet);font-size:9px">${getHolyName(e.date)}</span>`:''}</td>
       <td>${e.from}</td><td>${e.to}</td>
-      <td><span class="pill ${pillCls}">${fmtH(h)}</span></td>
+      <td><span class="pill ${pillCls}">${fmtH(h)}</span>${overLabel}${debtLabel}</td>
       <td style="color:var(--green);font-weight:600">${fmtPLN(pay)}</td>
     </tr>`;
   }).join('');
@@ -1358,20 +1104,37 @@ function renderManList(){
 }
 
 /* ════ STATYSTYKI ════ */
-function calcStats(entries,norm){
-  let totalH=0,normH=0,overH=0,satH=0,sunH=0,holyH=0,workDays=0,totalPay=0,usedNorm=0;
+function calcStats(entries, norm){
+  let totalH=0, normH=0, overH=0, satH=0, sunH=0, holyH=0, workDays=0, totalPay=0;
+  // Pierwsza pętla: oblicz wypłaty z długiem (model dzienny)
+  const debt = {value: 0};
   entries.filter(e=>e.type!=='vacation'&&e.type!=='sick').forEach(e=>{
-    const h=e.rounded||0,d=e.dow??(e.date?new Date(e.date).getDay():1),hl=isHoly(e.date||'');
-    totalH+=h;workDays++;
-    totalPay+=entryPay(h,e.date||'',d,usedNorm,norm);
-    if(hl)holyH+=h;
-    else if(d===6)satH+=h;
-    else if(d===0)sunH+=h;
-    else{const n=Math.min(h,Math.max(0,norm-usedNorm));normH+=n;overH+=h-n;usedNorm+=n;}
+    const h=e.rounded||0, d=e.dow??(e.date?new Date(e.date).getDay():1), hl=isHoly(e.date||'');
+    totalH+=h; workDays++;
+    totalPay += entryPay(h, e.date||'', d, debt);
+    if(hl) holyH+=h;
+    else if(d===6) satH+=h;
+    else if(d===0) sunH+=h;
   });
-  return{totalH,normH,overH,satH,sunH,holyH,workDays,totalPay,
-    normPay:normH*S.rate,overPay:overH*(S.rate+S.bonus),
-    satPay:satH*S.rate*S.sat,sunPay:sunH*S.rate*S.sun,holyPay:holyH*S.rate*(S.hol??2)};
+  // Druga pętla: oblicz statystyki normH/overH (niezależnie, ten sam algorytm długu)
+  const debt2 = {value: 0};
+  entries.filter(e=>e.type!=='vacation'&&e.type!=='sick').forEach(e=>{
+    const h=e.rounded||0, d=e.dow??(e.date?new Date(e.date).getDay():1), hl=isHoly(e.date||'');
+    if(hl||d===6||d===0) return;
+    const rawOver = h - S.norm;
+    if(rawOver <= 0){
+      normH += h;
+      debt2.value += (-rawOver);
+    } else {
+      const used = Math.min(rawOver, debt2.value);
+      debt2.value = Math.max(0, debt2.value - rawOver);
+      normH += S.norm + used;
+      overH += rawOver - used;
+    }
+  });
+  return{totalH, normH, overH, satH, sunH, holyH, workDays, totalPay,
+    normPay: normH*S.rate, overPay: overH*(S.rate+S.bonus),
+    satPay: satH*S.rate*S.sat, sunPay: sunH*S.rate*S.sun, holyPay: holyH*S.rate*(S.hol??2)};
 }
 
 /* ════ WYNIKI ════ */
@@ -1383,23 +1146,23 @@ function renderResults(){
   document.getElementById('res-empty').style.display='none';
   document.getElementById('res-content').style.display='block';
   const fd=CE.find(e=>e.date)?.date;
-  let norm=S.norm*20,year=null,month=null;
-  if(fd){const p=fd.split('-').map(Number);year=p[0];month=p[1];
-    const key=`${year}-${String(month).padStart(2,'0')}`;
-    norm=MH[key]?.norm||calcMonthNorm(year,month);}
-  const st=calcStats(CE,norm);
+  let year=null,month=null;
+  if(fd){const p=fd.split('-').map(Number);year=p[0];month=p[1];}
+  const st=calcStats(CE,0);
+  // Norma miesięczna tylko do paska postępu (informacyjnie)
+  const monthNorm = (year&&month) ? (calcMonthNorm(year,month)) : S.norm*20;
   document.getElementById('res-month-label').textContent=
-    (year&&month?`${MONTHS_NAME[month]} ${year} · norma: ${norm}h`:'Bieżący miesiąc')+
-    ` · ${S.rate} zł/h · nadg.: ${S.rate+S.bonus} zł/h`;
+    (year&&month?`${MONTHS_NAME[month]} ${year}`:'Bieżący miesiąc')+
+    ` · ${S.rate} zł/h norm · ${S.rate+S.bonus} zł/h nadg. (model dzienny ${S.norm}h)`;
   document.getElementById('rv-h').innerHTML=fmtH(st.totalH)+'<span class="metric-unit"></span>';
   document.getElementById('rv-pay').innerHTML=Math.round(st.totalPay).toLocaleString('pl-PL')+'<span class="metric-unit">zł</span>';
   document.getElementById('rv-days').innerHTML=st.workDays+'<span class="metric-unit">dni</span>';
   document.getElementById('rv-over').innerHTML=fmtH(st.overH+st.satH+st.sunH+st.holyH)+'<span class="metric-unit"></span>';
-  const pct=Math.min(100,Math.round(st.totalH/norm*100));
+  const pct=Math.min(100,Math.round(st.totalH/monthNorm*100));
   document.getElementById('rv-prog').style.width=pct+'%';
-  document.getElementById('rv-prog-lbl').textContent=fmtH(st.totalH)+' / '+norm+'h ('+pct+'%)';
+  document.getElementById('rv-prog-lbl').textContent=fmtH(st.totalH)+' / '+monthNorm+'h ('+pct+'%)';
   document.getElementById('rv-rate').textContent=S.rate+' zł/h';
-  document.getElementById('rv-norm-total').textContent=norm+'h';
+  document.getElementById('rv-norm-total').textContent=`${S.norm}h/dzień (miesięcznie ~${monthNorm}h)`;
   document.getElementById('rv-bonus').textContent=S.bonus;
   document.getElementById('rv-sat-mult').textContent=S.sat+'×';
   document.getElementById('rv-sun-mult').textContent=S.sun+'×';
@@ -1518,8 +1281,8 @@ function renderHistMonths(){
         <div class="hist-metric"><div class="hist-label">Nadgodz.</div><div class="hist-val amber">${fmtH((st.overH||0)+(st.satH||0)+(st.sunH||0)+(st.holyH||0))}</div></div>
         <div class="hist-metric"><div class="hist-label">Dni pracy</div><div class="hist-val">${st.workDays}</div></div>
         <div class="hist-metric"><div class="hist-label">Stawka</div><div class="hist-val">${mh.rate||S.rate} zł/h</div></div>
-        <div class="hist-metric"><div class="hist-label">Urlop sprzed.</div><div class="hist-val amber">${mh.vacSoldDays||0} dni</div></div>
-        <div class="hist-metric" style="grid-column:span 2"><div class="hist-label">Wypłata brutto</div><div class="hist-val green">${fmtPLN(totalPay)}</div></div>
+        ${mh.vacSoldDays>0?`<div class="hist-metric"><div class="hist-label">Urlop sprzed.</div><div class="hist-val amber">${mh.vacSoldDays} dni</div></div>`:''}
+        <div class="hist-metric" style="grid-column:span ${mh.vacSoldDays>0?1:2}"><div class="hist-label">Wypłata brutto</div><div class="hist-val green">${fmtPLN(totalPay)}</div></div>
       </div>
       <button class="btn" style="margin-bottom:0;font-size:11px;padding:7px" onclick="loadMonth('${key}')">⬅ Załaduj do wyników</button>
     </div>`;
@@ -1824,10 +1587,7 @@ function restoreData(file){
 
 /* ════ CSV ════ */
 function exportCSV(){
-  const fd=CE.find(e=>e.date)?.date;
-  let norm=S.norm*20;
-  if(fd){const p=fd.split('-').map(Number);const key=`${p[0]}-${String(p[1]).padStart(2,'0')}`;norm=MH[key]?.norm||calcMonthNorm(p[0],p[1]);}
-  let usedNorm=0;
+  const csvDebt={value:0};
   let csv='Data,Dzień,Święto,Typ,Wejście,Wyjście,Godziny,Stawka zł/h,Zarobek\n';
   CE.forEach(e=>{
     const h=e.rounded||0,d=e.dow??(e.date?new Date(e.date).getDay():1),hl=isHoly(e.date||'');
@@ -1836,7 +1596,14 @@ function exportCSV(){
     if(hl){stk=S.rate*(S.hol??2);pay=h*stk;}
     else if(d===6){stk=S.rate*S.sat;pay=h*stk;}
     else if(d===0){stk=S.rate*S.sun;pay=h*stk;}
-    else{const rem=Math.max(0,norm-usedNorm),n=Math.min(h,rem),o=h-n;stk=S.rate;pay=n*S.rate+o*(S.rate+S.bonus);usedNorm+=n;}
+    else{
+      const debtBefore=csvDebt.value;
+      pay=entryPay(h,e.date||'',d,csvDebt);
+      // Stawka do CSV: jeśli są nadgodziny ponad dług — powyżej stawki
+      const rawOver=Math.max(0,h-S.norm);
+      const paidOver=Math.max(0,rawOver-debtBefore);
+      stk=paidOver>0?(S.rate+S.bonus):S.rate;
+    }
     csv+=`${e.date},${DOW[d]||''},${hName},${e.type||''},${e.from||''},${e.to||''},${h},${stk.toFixed(2)},${Math.round(pay)}\n`;
   });
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
@@ -1866,7 +1633,7 @@ function clearAll(){
 
 /* ════ SWIPE MIĘDZY TABAMI ════ */
 (function(){
-  var TABS=['import','manual','results','history','vacation','settings'];
+  const TABS=['import','manual','results','history','vacation','settings'];
   let tx=0, ty=0, swiping=false;
   const main=document.querySelector('.main');
 
@@ -1899,28 +1666,7 @@ function clearAll(){
   },{passive:true});
 })();
 
-// Auto-fetch przy starcie — uruchamiamy PO załadowaniu wszystkich funkcji
-(function autoFetchOnLoad(){
-  if(!S.autoFetch) return;
-  var url=getSavedUrl();
-  if(!url) return;
-  setTimeout(function(){
-    try{
-      if(document.getElementById('screen-import') &&
-         document.getElementById('screen-import').classList.contains('active')){
-        fetchReport();
-      } else {
-        showToast('⏳ Pobieram dane w tle…');
-        fetchReport().catch(function(){});
-      }
-    }catch(e){ console.error('autoFetch error:',e); }
-  }, 1000);
-})();
-
-updateMonthDisplay();
-
 renderManList();
-checkFirstSetup();
 </script>
 </body>
 </html>
